@@ -1,0 +1,1066 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+DOMESTIC Invoice Validator — Inland Trucking (HVDC · COST‑GUARD ready)
+---------------------------------------------------------------------
+- Normalizes O/D/Vehicle/Unit
+- Joins against approved domestic reference lanes (exact → similarity ≥ 0.60)
+- Computes Δ% vs ref, COST‑GUARD band (PASS/WARN/HIGH/CRITICAL), and RiskScore
+- Enforces fixed FX (1 USD = 3.6725 AED), unit consistency, and simple anomaly checks
+- Emits PRISM recap.card (5 lines) + proof.artifact (JSON with sha256)
+
+Usage
+-----
+$ python domestic_validator.py --in invoices.csv --out out.xlsx \
+    --ref-xlsx /mnt/data/mapping_update_20250819.xlsx
+
+Optional: create a sample input
+$ python domestic_validator.py --sample
+$ python domestic_validator.py --in invoices_sample.csv --out result.xlsx
+
+Input schema (CSV)
+------------------
+shipment_ref,origin,destination,vehicle,unit,rate_usd,amount_usd,quantity,distance_km,currency,supplier_grade
+HVDC-EX-0001,DSV Mussafah Yard,MIRFA SITE,FLATBED,per truck,420,,1,120,USD,A
+...
+
+References
+----------
+- COST‑GUARD Δ% bands; canonical mapping; similarity weights & threshold (≥0.60): internal O/D mapping standard.
+- Fixed FX: 1 USD = 3.6725 AED.
+- Contract ±3% rule layered on top of COST‑GUARD.
+
+This script prefers reference lanes from an Excel (mapping_update_20250819.xlsx).
+If that file isn't available, it falls back to a small built‑in reference set.
+"""
+import argparse
+import csv
+import datetime as dt
+import difflib
+import hashlib
+import json
+import math
+import re
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+try:
+    import pandas as pd
+    import numpy as np
+except Exception as e:
+    raise SystemExit(
+        "This script requires pandas and numpy. Try: pip install pandas numpy"
+    )
+
+
+FX_USD_TO_AED = 3.6725
+
+# COST-GUARD Δ% bands (abs(Δ%))
+CG_BANDS = [
+    (2.0, "PASS"),
+    (5.0, "WARN"),
+    (10.0, "HIGH"),
+    (float("inf"), "CRITICAL"),
+]
+
+# Similarity weights & threshold (Origin 0.35 + Destination 0.35 + Vehicle 0.10 + Distance 0.10 (≤15km) + Rate 0.10 (±30%))
+SIM_W = {"origin": 0.35, "dest": 0.35, "vehicle": 0.10, "distance": 0.10, "rate": 0.10}
+SIM_THRESHOLD = 0.60
+
+# Contract static tolerance (layered check)
+CONTRACT_TOL_PCT = 3.0
+
+# Auto-fail safeguard
+AUTO_FAIL_PCT = 15.0
+
+# Supplier credit bands (A/B/C) → additional tolerance for informational use
+SUPPLIER_TOL_PCT = {"A": 2.0, "B": 3.0, "C": 5.0}
+
+
+@dataclass
+class RefLane:
+    origin: str
+    destination: str
+    vehicle: str
+    unit: str
+    ref_rate_usd: float
+    ref_distance_km: Optional[float] = None
+
+
+def _clean(s: Optional[str]) -> str:
+    if s is None:
+        return ""
+    return " ".join(str(s).strip().replace("_", " ").split())
+
+
+def load_normalization_map(ref_xlsx: Optional[Path]) -> Dict[str, str]:
+    """Load canonical place normalization map from Excel if available, else fallback."""
+    fallback = {
+        "DSV MUSSAFAH YARD": "DSV Mussafah Yard",
+        "MIRFA PMO SAMSUNG": "MIRFA SITE",
+        "MIRFA": "MIRFA SITE",
+        "MOSB": "Al Masaood (MOSB)",
+        "AL MASAOOD MUSSAFAH": "DSV Mussafah Yard",
+        "M44 WAREHOUSE": "M44 Warehouse",
+        "MINA FREEPORT": "Mina Zayed Port",
+        "MINA ZAYED": "Mina Zayed Port",
+        "SHUWEIHAT": "SHUWEIHAT Site",
+        "SHUWEIHAT POWER STATION": "SHUWEIHAT Site",
+        "PRESTIGE MUSSAFAH": "DSV Mussafah Yard",
+        "PRESTIGE ICAD": "Prestige Mussafah",
+        "AAA WAREHOUSE , ICAD-3": "AAA Warehouse",
+        "KEC DIP DUBAI": "Kec Dip Dubai",
+        "TESLA DUBAI": "Tesla Dubai",
+        "JDN MINA ZAYED": "Mina Zayed Port",
+        "AL MARKAZ WAREHOUSE": "Al Markaz Warehouse",
+    }
+    if ref_xlsx and ref_xlsx.exists():
+        try:
+            df = pd.read_excel(ref_xlsx, sheet_name="NormalizationMap")
+            df = df.rename(columns={c: c.strip().lower() for c in df.columns})
+            rm = df.set_index("raw_place")["normalized"].to_dict()
+            # Merge fallback to be safe
+            rm.update(fallback)
+            # Make symmetric for already normalized keys too
+            for v in list(rm.values()):
+                rm[v] = v
+            return {k.strip(): v for k, v in rm.items()}
+        except Exception:
+            pass
+    # symmetric fallback
+    for v in list(fallback.values()):
+        fallback[v] = v
+    return fallback
+
+
+def normalize_place(name: str, norm_map: Dict[str, str]) -> str:
+    key = _clean(name).upper()
+    return norm_map.get(key, norm_map.get(_clean(name), _clean(name)))
+
+
+def load_reference_lanes(ref_xlsx: Optional[Path]) -> List[RefLane]:
+    """Prefer Excel ApprovedLaneMap; else return a small embedded set."""
+    lanes: List[RefLane] = []
+    if ref_xlsx and ref_xlsx.exists():
+        try:
+            df = pd.read_excel(ref_xlsx, sheet_name="ApprovedLaneMap")
+            df = df.rename(columns={c: c.strip().lower() for c in df.columns})
+            # Expected columns seen in the standard dump
+            needed = {"origin", "destination", "vehicle", "unit", "median_rate_usd"}
+            if needed.issubset(set(df.columns)):
+                for _, r in df.iterrows():
+                    try:
+                        lanes.append(
+                            RefLane(
+                                origin=_clean(r["origin"]),
+                                destination=_clean(r["destination"]),
+                                vehicle=_clean(r["vehicle"]).upper(),
+                                unit=_clean(r["unit"]).lower(),
+                                ref_rate_usd=float(r["median_rate_usd"]),
+                                ref_distance_km=(
+                                    float(r["median_distance_km"])
+                                    if "median_distance_km" in df.columns
+                                    and pd.notna(r.get("median_distance_km"))
+                                    else None
+                                ),
+                            )
+                        )
+                    except Exception:
+                        continue
+                if lanes:
+                    return lanes
+        except Exception:
+            pass
+
+    # Embedded minimal references (fallback)
+    embedded = [
+        # origin, destination, vehicle, unit, ref_rate_usd, ref_distance_km
+        ("DSV Mussafah Yard", "MIRFA SITE", "FLATBED", "per truck", 420.0, 120.0),
+        ("DSV Mussafah Yard", "SHUWEIHAT Site", "FLATBED", "per truck", 600.0, 240.0),
+        ("Al Masaood (MOSB)", "DSV Mussafah Yard", "FLATBED", "per truck", 200.0, 10.0),
+        ("Mina Zayed Port", "Mina Zayed Port", "LOWBED", "per truck", 980.26, 5.0),
+        ("Al Masaood (MOSB)", "Mina Zayed Port", "FLATBED", "per truck", 171.0, 40.0),
+        ("DSV Mussafah Yard", "Al Masaood (MOSB)", "LOWBED", "per truck", 617.0, 11.4),
+        ("M44 Warehouse", "SHUWEIHAT Site", "FLATBED", "per truck", 600.0, 250.0),
+        ("Al Masaood (MOSB)", "MIRFA SITE", "FLATBED", "per truck", 420.0, 120.0),
+    ]
+    for o, d, v, u, r, dist in embedded:
+        lanes.append(RefLane(o, d, v, u, r, dist))
+    return lanes
+
+
+def seq_ratio(a: str, b: str) -> float:
+    if not a or not b:
+        return 0.0
+    return difflib.SequenceMatcher(a=a.lower(), b=b.lower()).ratio()
+
+
+# ========== Patch A1: 토큰세트 기반 유사도 보강 ==========
+def _tok(s):
+    """알파벳+숫자 토큰 추출"""
+    return set(re.findall(r"[A-Za-z0-9]+", str(s).upper()))
+
+
+def token_set_sim(a, b):
+    """토큰 세트 Jaccard 유사도"""
+    A, B = _tok(a), _tok(b)
+    if not A or not B:
+        return 0.0
+    inter = len(A & B)
+    uni = len(A | B)
+    return inter / uni if uni > 0 else 0.0
+
+
+def trigram_sim(a, b):
+    """3-gram 유사도"""
+
+    def grams(x):
+        x = "  " + str(x).upper() + "  "
+        return {x[i : i + 3] for i in range(len(x) - 2)}
+
+    A, B = grams(a), grams(b)
+    if not A or not B:
+        return 0.0
+    inter_len = len(A & B)
+    uni_len = len(A | B)
+    return inter_len / uni_len if uni_len > 0 else 0.0
+
+
+def od_similarity(a, b):
+    """
+    Origin/Destination 부분 일치 유사도
+    토큰세트 0.6 + 트리그램 0.4 가중
+    """
+    return 0.6 * token_set_sim(a, b) + 0.4 * trigram_sim(a, b)
+
+
+# ========== End Patch A1 ==========
+
+
+# ========== Patch A3: Region 대체 레퍼런스 계층 (Enhanced) ==========
+def get_region(place):
+    """
+    장소를 Region으로 그룹화
+    Step 1-A: 지역 토큰 확장 (PRESTIGE, PORT, PMO, POWER 추가)
+    """
+    if pd.isna(place):
+        return "OTHER"
+    p = str(place).upper()
+    # MUSSAFAH Cluster 확장
+    if any(
+        keyword in p for keyword in ["MUSSAFAH", "ICAD", "M44", "MARKAZ", "PRESTIGE"]
+    ):
+        return "MUSSAFAH_CLUSTER"
+    # MINA Cluster 확장
+    if any(keyword in p for keyword in ["MINA", "FREEPORT", "ZAYED", "JDN", "PORT"]):
+        return "MINA_CLUSTER"
+    # MIRFA Cluster 확장
+    if any(keyword in p for keyword in ["MIRFA", "PMO"]):
+        return "MIRFA_CLUSTER"
+    # SHUWEIHAT Cluster 확장
+    if any(keyword in p for keyword in ["SHUWEIHAT", "SHU", "S2", "S3", "POWER"]):
+        return "SHUWEIHAT_CLUSTER"
+    if "MOSB" in p or "MASAOOD" in p:
+        return "MOSB_CLUSTER"
+    return "OTHER"
+
+
+# ========== End Patch A3 ==========
+
+
+# ========== Patch A4: 초근거리 최소요금 모델 ==========
+MIN_FARE_BY_VEHICLE = {
+    "FLATBED": 200.0,
+    "FLATBED HAZMAT": 250.0,
+    "FLATBED (CICPA)": 220.0,
+    "LOWBED": 600.0,
+    "LOWBED (23M)": 800.0,
+    "3 TON PU": 150.0,
+    "7 TON PU": 180.0,
+}
+SHORT_RUN_THRESHOLD_KM = 10.0
+
+
+def apply_min_fare_if_needed(row, ref_rate):
+    """
+    초근거리(≤10km)일 경우 Min-Fare 적용
+    Returns: (adjusted_ref_rate, is_min_fare_applied)
+    """
+    distance = row.get("distance_km", 0)
+    vehicle = row.get("vehicle_norm", "FLATBED")
+
+    if pd.notna(distance) and distance <= SHORT_RUN_THRESHOLD_KM:
+        min_fare = MIN_FARE_BY_VEHICLE.get(vehicle, 200.0)
+
+        # ref_rate가 없거나 Min-Fare보다 낮으면 Min-Fare 사용
+        if pd.isna(ref_rate) or ref_rate < min_fare:
+            return min_fare, True
+
+    return ref_rate, False
+
+
+# ========== End Patch A4 ==========
+
+
+def closeness_distance(inv_km: Optional[float], ref_km: Optional[float]) -> float:
+    """Linear decay to 0 at 15 km difference."""
+    if inv_km is None or ref_km is None:
+        return 0.0
+    diff = abs(inv_km - ref_km)
+    return max(0.0, 1.0 - (diff / 15.0))
+
+
+def closeness_rate(inv_rate: Optional[float], ref_rate: Optional[float]) -> float:
+    """Symmetric % diff; 0 at 30% difference or more."""
+    if inv_rate is None or ref_rate in (None, 0):
+        return 0.0
+    delta = abs((inv_rate - ref_rate) / ref_rate) * 100.0
+    return max(0.0, 1.0 - (delta / 30.0))
+
+
+def lane_similarity(inv, ref: RefLane) -> float:
+    # Patch A1: 토큰세트 기반 유사도 적용 (부분 일치 지원)
+    s_origin = SIM_W["origin"] * od_similarity(inv["origin_norm"], ref.origin)
+    s_dest = SIM_W["dest"] * od_similarity(inv["destination_norm"], ref.destination)
+    s_vehicle = SIM_W["vehicle"] * (
+        1.0
+        if inv["vehicle_norm"] == ref.vehicle
+        else seq_ratio(inv["vehicle_norm"], ref.vehicle)
+    )
+    s_distance = SIM_W["distance"] * closeness_distance(
+        inv.get("distance_km"), ref.ref_distance_km
+    )
+    s_rate = SIM_W["rate"] * closeness_rate(inv.get("rate_usd"), ref.ref_rate_usd)
+    return s_origin + s_dest + s_vehicle + s_distance + s_rate
+
+
+def classify_band(delta_pct_abs: float) -> str:
+    for lim, name in CG_BANDS:
+        if delta_pct_abs <= lim:
+            return name
+    return "CRITICAL"
+
+
+def robust_group_anomaly(per_km: pd.Series) -> pd.Series:
+    """Simple robust Z via median & MAD; flag z>3."""
+    med = per_km.median()
+    mad = (per_km - med).abs().median()
+    if mad == 0:
+        return pd.Series([0.0] * len(per_km), index=per_km.index)
+    z = 0.6745 * (per_km - med).abs() / mad
+    return z
+
+
+def compute_confidence(sim: float, delta_abs: float, completeness: float) -> float:
+    # Similarity dominates; Δ% contribution saturates by 30%; completeness (0..1)
+    c_delta = max(0.0, 1.0 - min(delta_abs, 30.0) / 30.0)
+    score = 0.5 * sim + 0.3 * c_delta + 0.2 * completeness
+    return float(max(0.0, min(1.0, score)))
+
+
+def risk_score(
+    delta_abs: float, anomaly_flag: int, cert_missing: int = 0, signature_risk: int = 0
+) -> float:
+    # Matches the spec: (Δrate%0.4)+(Anomaly0.3)+(CertMissing0.2)+(SignatureRisk0.1), normalize Δ% by 100
+    return float(
+        min(
+            1.0,
+            max(
+                0.0,
+                (delta_abs / 100.0) * 0.4
+                + anomaly_flag * 0.3
+                + cert_missing * 0.2
+                + signature_risk * 0.1,
+            ),
+        )
+    )
+
+
+def fx_check(row) -> Tuple[bool, str]:
+    # Handle pandas NA values
+    cur_val = row.get("currency")
+    if pd.isna(cur_val) or cur_val == "" or cur_val is None:
+        cur = "USD"
+    else:
+        cur = _clean(str(cur_val)).upper()
+
+    if cur in ("", "USD"):
+        return True, "USD_OK"
+    if cur == "AED":
+        # if amount provided, verify fixed rate
+        rate = row.get("rate_usd")
+        amount = row.get("amount_usd")
+        if pd.notna(amount) and pd.notna(rate):
+            aed_expected = rate * FX_USD_TO_AED
+            # allow tiny rounding
+            if abs((amount - aed_expected) / max(1.0, aed_expected)) <= 0.005:
+                return True, "AED_OK_FIXED_RATE"
+        return False, "CURRENCY_MISMATCH_FIXED_RATE_REQUIRED"
+    return False, f"UNSUPPORTED_CURRENCY_{cur}"
+
+
+def make_recap_card(total: int, counts: Dict[str, int]) -> str:
+    # P,R,I,S,M (5 lines)
+    P = "P:: invoice-validate · join-ref · cost-guard"
+    R = "R:: Δ% bands ≤2/5/10 · ±3% contract · FX USD=3.6725AED"
+    I = f"I:: {{total:{total}, pass:{counts.get('PASS',0)}, warn:{counts.get('WARN',0)}, high:{counts.get('HIGH',0)}, critical:{counts.get('CRITICAL',0)}}}"
+    S = "S:: normalize→join(exact→sim≥0.60)→score→decide→export"
+    M = "M:: {result.table, recap.card, proof.artifact.json}"
+    return "\n".join([P, R, I, S, M])
+
+
+def make_artifact(config: dict, result_df: pd.DataFrame) -> dict:
+    now = dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    out = {
+        "artifact_id": f"DomesticAudit-{now.replace(':','').replace('-','')}",
+        "created_at_utc": now,
+        "config": config,
+        "counts": result_df["cg_band"].value_counts().to_dict(),
+        "status": "FAIL" if (result_df["decision"] == "FAIL").any() else "PASS",
+        "items": result_df[
+            [
+                "shipment_ref",
+                "origin_norm",
+                "destination_norm",
+                "vehicle_norm",
+                "unit",
+                "rate_usd",
+                "ref_rate_usd",
+                "delta_pct",
+                "cg_band",
+                "similarity",
+                "confidence",
+                "risk_score",
+                "decision",
+                "flags",
+            ]
+        ].to_dict(orient="records"),
+    }
+    # Deterministic proof hash
+    canonical = json.dumps(out, ensure_ascii=False, sort_keys=True)
+    out["proof_hash_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return out
+
+
+def validate(
+    df: pd.DataFrame, ref_xlsx: Optional[Path] = None
+) -> Tuple[pd.DataFrame, str, dict]:
+    # Load refs and normalization map
+    norm_map = load_normalization_map(ref_xlsx)
+    ref_lanes = load_reference_lanes(ref_xlsx)
+    if not ref_lanes:
+        raise RuntimeError(
+            "No reference lanes available. Provide --ref-xlsx with ApprovedLaneMap sheet."
+        )
+
+    # Prepare input
+    cols = [c.strip().lower() for c in df.columns]
+    df.columns = cols
+    expected = {
+        "shipment_ref",
+        "origin",
+        "destination",
+        "vehicle",
+        "unit",
+        "rate_usd",
+        "amount_usd",
+        "quantity",
+        "distance_km",
+        "currency",
+        "supplier_grade",
+    }
+    # fill missing optional cols
+    for col in expected:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+    # Normalize fields
+    df["origin_norm"] = df["origin"].apply(lambda x: normalize_place(str(x), norm_map))
+    df["destination_norm"] = df["destination"].apply(
+        lambda x: normalize_place(str(x), norm_map)
+    )
+    df["vehicle_norm"] = df["vehicle"].astype(str).str.upper().str.strip()
+    df["unit"] = df["unit"].astype(str).str.lower().str.strip()
+    df["rate_usd"] = pd.to_numeric(df["rate_usd"], errors="coerce")
+    df["distance_km"] = pd.to_numeric(df["distance_km"], errors="coerce")
+    df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce")
+    df["amount_usd"] = pd.to_numeric(df["amount_usd"], errors="coerce")
+    df["supplier_grade"] = (
+        df["supplier_grade"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .replace({"<NA>": "A"})
+        .fillna("A")
+    )
+
+    # Completeness
+    need_for_conf = [
+        "origin_norm",
+        "destination_norm",
+        "vehicle_norm",
+        "unit",
+        "rate_usd",
+    ]
+    df["completeness"] = df[need_for_conf].notna().mean(axis=1)
+
+    # Join: exact first
+    lanes_df = pd.DataFrame([asdict(l) for l in ref_lanes])
+    lanes_df["key"] = (
+        lanes_df["origin"].str.upper()
+        + "→"
+        + lanes_df["destination"].str.upper()
+        + "|"
+        + lanes_df["vehicle"].str.upper()
+        + "|"
+        + lanes_df["unit"].str.lower()
+    )
+
+    def make_key(row):
+        return (
+            str(row["origin_norm"]).upper()
+            + "→"
+            + str(row["destination_norm"]).upper()
+            + "|"
+            + str(row["vehicle_norm"]).upper()
+            + "|"
+            + str(row["unit"]).lower()
+        )
+
+    df["join_key"] = df.apply(make_key, axis=1)
+    df = df.merge(
+        lanes_df[["key", "ref_rate_usd", "ref_distance_km"]],
+        left_on="join_key",
+        right_on="key",
+        how="left",
+    )
+    df = df.drop(columns=["key"])
+
+    # Similarity join for missing refs
+    missing_mask = df["ref_rate_usd"].isna()
+    if missing_mask.any():
+        # Compute similarity to all lanes (could be heavy; optimize if needed)
+        ref_records = lanes_df.to_dict(orient="records")
+        sim_ref_rate = []
+        sim_ref_dist = []
+        sim_score = []
+        sim_method = []
+
+        for idx, row in df[missing_mask].iterrows():
+            inv = {
+                "origin_norm": row["origin_norm"],
+                "destination_norm": row["destination_norm"],
+                "vehicle_norm": row["vehicle_norm"],
+                "unit": row["unit"],
+                "rate_usd": row["rate_usd"],
+                "distance_km": row["distance_km"],
+            }
+            best = (None, None, 0.0, "none")
+
+            for r in ref_records:
+                if r["unit"] != inv["unit"]:
+                    continue  # don't cross units
+                ref = RefLane(
+                    r["origin"],
+                    r["destination"],
+                    r["vehicle"].upper(),
+                    r["unit"],
+                    r["ref_rate_usd"],
+                    r.get("ref_distance_km"),
+                )
+                score = lane_similarity(inv, ref)
+
+                # Patch A2: 동적 임계값 적용
+                dist_close = closeness_distance(
+                    inv.get("distance_km"), ref.ref_distance_km
+                )
+                thr_dynamic = min(0.60, 0.55 + 0.10 * (1.0 - dist_close))  # 0.55~0.60
+
+                # 완화된 조건: 동적 임계값 또는 (거리 근접 AND score≥0.50)
+                if score >= thr_dynamic or (dist_close >= 0.75 and score >= 0.50):
+                    if score > best[2]:
+                        best = (
+                            ref.ref_rate_usd,
+                            ref.ref_distance_km,
+                            score,
+                            "similarity",
+                        )
+
+            sim_ref_rate.append(best[0])
+            sim_ref_dist.append(best[1])
+            sim_score.append(best[2])
+            sim_method.append(best[3])
+
+        df.loc[missing_mask, "ref_rate_usd"] = sim_ref_rate
+        df.loc[missing_mask, "ref_distance_km"] = sim_ref_dist
+        df.loc[missing_mask, "similarity"] = sim_score
+        df.loc[missing_mask, "ref_method"] = sim_method
+    else:
+        df["similarity"] = 1.0
+        df["ref_method"] = "exact"
+
+    df["similarity"] = df["similarity"].fillna(1.0)
+    df["ref_method"] = df.get("ref_method", "exact").fillna("exact")
+    df["similarity_pass"] = (
+        df["similarity"] >= 0.50
+    )  # Patch A2: 임계값 0.60 → 0.50으로 완화
+
+    # Patch A4: 초근거리 Min-Fare 적용
+    min_fare_applied_list = []
+    adjusted_ref_rates = []
+
+    for idx, row in df.iterrows():
+        original_ref = row.get("ref_rate_usd")
+        adjusted_ref, is_min_fare = apply_min_fare_if_needed(row, original_ref)
+        adjusted_ref_rates.append(adjusted_ref)
+        min_fare_applied_list.append(is_min_fare)
+
+    df["ref_rate_usd"] = adjusted_ref_rates
+    df["min_fare_applied"] = min_fare_applied_list
+
+    # Step 3: Apply HAZMAT/CICPA adjusters (rate multipliers)
+    # Enhanced config for special vehicle surcharges
+    adjusters_config = {
+        "enabled": True,
+        "rules": [
+            {"if_vehicle_contains": "HAZMAT", "rate_multiplier": 1.15},
+            {"if_vehicle_contains": "CICPA", "rate_multiplier": 1.08},
+        ],
+    }
+
+    if adjusters_config.get("enabled", False):
+        rules = adjusters_config.get("rules", [])
+
+        def apply_adjuster(row):
+            ref = row["ref_rate_usd"]
+            if pd.isna(ref):
+                return ref
+            vehicle_str = str(row.get("vehicle", "")).upper()
+            multiplier = 1.0
+
+            for rule in rules:
+                keyword = str(rule.get("if_vehicle_contains", "")).upper()
+                if keyword and keyword in vehicle_str:
+                    multiplier *= float(rule.get("rate_multiplier", 1.0))
+
+            return round(ref * multiplier, 2) if multiplier != 1.0 else ref
+
+        df["ref_rate_usd"] = df.apply(apply_adjuster, axis=1)
+
+    # Unit/match flags
+    df["flags"] = ""
+    df.loc[df["ref_rate_usd"].isna(), "flags"] = (
+        df["flags"] + "|REF_MISSING"
+    ).str.strip("|")
+    df.loc[~df["similarity_pass"] & df["ref_rate_usd"].notna(), "flags"] = (
+        df["flags"] + "|LOW_SIMILARITY"
+    ).str.strip("|")
+    df.loc[df["min_fare_applied"] == True, "flags"] = (
+        df["flags"] + "|MIN_FARE_APPLIED"
+    ).str.strip("|")
+
+    # Δ%, bands, contract check
+    df["delta_pct"] = np.where(
+        df["ref_rate_usd"].notna(),
+        (df["rate_usd"] - df["ref_rate_usd"]) / df["ref_rate_usd"] * 100.0,
+        np.nan,
+    )
+    df["delta_abs"] = df["delta_pct"].abs()
+    df["cg_band"] = df["delta_abs"].apply(
+        lambda x: classify_band(x) if pd.notna(x) else "REF_MISSING"
+    )
+
+    # Contract ±3% informational flag
+    df["contract_ok"] = df["delta_abs"] <= CONTRACT_TOL_PCT
+
+    # Supplier tolerance informational
+    df["supplier_tol_ok"] = df.apply(
+        lambda r: bool(
+            pd.isna(r["delta_abs"])
+            or r["delta_abs"]
+            <= SUPPLIER_TOL_PCT.get(str(r["supplier_grade"]).upper(), 3.0)
+        ),
+        axis=1,
+    )
+
+    # FX checks
+    fx_ok, fx_msg = [], []
+    for _, r in df.iterrows():
+        ok, msg = fx_check(r)
+        fx_ok.append(ok)
+        fx_msg.append(msg)
+    df["fx_ok"] = fx_ok
+    df["fx_msg"] = fx_msg
+    df.loc[~df["fx_ok"], "flags"] = (df["flags"] + "|FX_ERROR").str.strip("|")
+
+    # per-km anomaly by vehicle group (only when distance available and >0)
+    df["per_km"] = np.where(
+        (df["distance_km"].notna())
+        & (df["distance_km"] > 0)
+        & (df["rate_usd"].notna()),
+        df["rate_usd"] / df["distance_km"],
+        np.nan,
+    )
+    df["anomaly_z"] = df.groupby(df["vehicle_norm"])["per_km"].transform(
+        lambda s: robust_group_anomaly(s) if s.notna().any() else s
+    )
+    df["anomaly_flag"] = (df["anomaly_z"] > 3.0).fillna(False).astype(int)
+    df.loc[df["anomaly_flag"] == 1, "flags"] = (
+        df["flags"] + "|PER_KM_ANOMALY"
+    ).str.strip("|")
+
+    # Confidence & risk
+    df["confidence"] = df.apply(
+        lambda r: compute_confidence(
+            float(r.get("similarity") or 0.0),
+            float(r.get("delta_abs") or 0.0),
+            float(r.get("completeness") or 0.0),
+        ),
+        axis=1,
+    )
+    df["risk_score"] = df.apply(
+        lambda r: risk_score(
+            float(r.get("delta_abs") or 0.0), int(r.get("anomaly_flag") or 0), 0, 0
+        ),
+        axis=1,
+    )
+
+    # Decision logic
+    def decide(row):
+        if pd.isna(row["ref_rate_usd"]) or (not row["fx_ok"]):
+            return "PENDING_REVIEW"
+        if row["delta_abs"] > AUTO_FAIL_PCT:
+            return "FAIL"
+        # Map bands to decision
+        if row["cg_band"] in ("HIGH", "CRITICAL"):
+            return "PENDING_REVIEW"
+        return "PASS"
+
+    df["decision"] = df.apply(decide, axis=1)
+
+    # Similarity threshold enforcement (if sim-joined below threshold)
+    df.loc[
+        (df["similarity"] < SIM_THRESHOLD) & df["ref_rate_usd"].notna(), "decision"
+    ] = "PENDING_REVIEW"
+
+    # Final flags
+    df.loc[df["decision"] == "FAIL", "flags"] = (df["flags"] + "|AUTO_FAIL").str.strip(
+        "|"
+    )
+
+    # Step 4: Confidence Gate - Auto-verify high confidence items
+    confidence_gate_config = {
+        "enabled": True,
+        "min_similarity": 0.70,
+        "min_confidence": 0.92,
+        "auto_verify_bands": ["PASS", "WARN"],
+    }
+
+    if confidence_gate_config.get("enabled", False):
+        df["confidence_gate"] = (
+            df.get("similarity", 0) >= confidence_gate_config["min_similarity"]
+        ) & (df.get("confidence", 0) >= confidence_gate_config["min_confidence"])
+        # Auto-verify items that pass confidence gate
+        auto_verify_mask = (
+            df["cg_band"].isin(confidence_gate_config["auto_verify_bands"])
+            & df["confidence_gate"]
+        )
+        df.loc[auto_verify_mask, "decision"] = "VERIFIED"
+    else:
+        df["confidence_gate"] = False
+
+    # Step 5: Under-charge buffer - Route negative delta CRITICAL to review
+    under_buffer_config = {"enabled": True}
+
+    if under_buffer_config.get("enabled", False):
+        is_under_charge = df.get("delta_pct", 0) < 0
+        under_critical_mask = (df["cg_band"] == "CRITICAL") & is_under_charge
+        df.loc[under_critical_mask, "decision"] = "PENDING_REVIEW"
+        df.loc[under_critical_mask, "flags"] = (
+            df["flags"] + "|UNDER_CHARGE_REVIEW"
+        ).str.strip("|")
+
+    # Confidence/ML threshold for automation
+    df["ml_confidence"] = df["confidence"]
+    df["automation_ready"] = (df["ml_confidence"] >= 0.95) & (df["decision"] == "PASS")
+
+    # Prepare recap & artifact
+    counts = df["cg_band"].value_counts().to_dict()
+    recap = make_recap_card(len(df), counts)
+
+    config = {
+        "fx_usd_to_aed": FX_USD_TO_AED,
+        "cg_bands": CG_BANDS,
+        "similarity": {"weights": SIM_W, "threshold": SIM_THRESHOLD},
+        "contract_tolerance_pct": CONTRACT_TOL_PCT,
+        "supplier_tolerance_pct": SUPPLIER_TOL_PCT,
+        "auto_fail_pct": AUTO_FAIL_PCT,
+    }
+    artifact = make_artifact(config, df)
+
+    # Column order for UX
+    preferred_cols = [
+        "shipment_ref",
+        "origin",
+        "destination",
+        "origin_norm",
+        "destination_norm",
+        "vehicle",
+        "vehicle_norm",
+        "unit",
+        "rate_usd",
+        "ref_rate_usd",
+        "delta_pct",
+        "cg_band",
+        "contract_ok",
+        "supplier_grade",
+        "supplier_tol_ok",
+        "distance_km",
+        "ref_distance_km",
+        "per_km",
+        "anomaly_z",
+        "anomaly_flag",
+        "similarity",
+        "similarity_pass",
+        "confidence",
+        "ml_confidence",
+        "risk_score",
+        "fx_msg",
+        "decision",
+        "flags",
+    ]
+    others = [c for c in df.columns if c not in preferred_cols]
+    df = df[preferred_cols + others]
+
+    return df, recap, artifact
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="DOMESTIC Invoice Validator — Inland Trucking"
+    )
+    ap.add_argument("--in", dest="inp", help="Input CSV of invoice lines", default=None)
+    ap.add_argument(
+        "--out",
+        dest="out",
+        help="Output XLSX file (results)",
+        default="domestic_result.xlsx",
+    )
+    ap.add_argument(
+        "--ref-xlsx",
+        dest="ref_xlsx",
+        help="Reference Excel (mapping_update_20250819.xlsx)",
+        default=None,
+    )
+    ap.add_argument(
+        "--sample",
+        action="store_true",
+        help="Write a sample CSV (invoices_sample.csv) and exit",
+    )
+    args = ap.parse_args()
+
+    if args.sample:
+        sample = [
+            # shipment_ref, origin, destination, vehicle, unit, rate_usd, amount_usd, quantity, distance_km, currency, supplier_grade
+            [
+                "HVDC-ADOPT-SCT-0066",
+                "DSV Mussafah Yard",
+                "MIRFA SITE",
+                "FLATBED",
+                "per truck",
+                420,
+                "",
+                1,
+                120,
+                "USD",
+                "A",
+            ],
+            [
+                "HVDC-DSV-MOSB-DSV-112",
+                "MOSB",
+                "DSV MUSSAFAH YARD",
+                "FLATBED",
+                "per truck",
+                200,
+                "",
+                1,
+                10,
+                "USD",
+                "A",
+            ],
+            [
+                "HVDC-DSV-MOSB-SHU-101",
+                "DSV M44 WAREHOUSE",
+                "SHUWEIHAT Site",
+                "FLATBED",
+                "per truck",
+                600,
+                "",
+                1,
+                250,
+                "USD",
+                "B",
+            ],
+            [
+                "HVDC-DSV-MOSB-ALM-117",
+                "Mina Freeport",
+                "Mina Freeport",
+                "LOWBED",
+                "per truck",
+                980.26,
+                "",
+                1,
+                5,
+                "USD",
+                "A",
+            ],
+            [
+                "HVDC-KEC-DIP-098",
+                "KEC DIP DUBAI",
+                "SHUWEIHAT",
+                "FLATBED",
+                "per truck",
+                980,
+                "",
+                1,
+                161.4,
+                "USD",
+                "A",
+            ],
+            [
+                "HVDC-OD-UNKNOWN",
+                "Random Yard",
+                "Unknown Site",
+                "FLATBED",
+                "per truck",
+                450,
+                "",
+                1,
+                118,
+                "USD",
+                "C",
+            ],
+            [
+                "HVDC-AED-TEST",
+                "DSV Mussafah Yard",
+                "MIRFA SITE",
+                "FLATBED",
+                "per truck",
+                420,
+                420 * 3.6725,
+                1,
+                120,
+                "AED",
+                "A",
+            ],
+            [
+                "HVDC-ANOMALY",
+                "DSV Mussafah Yard",
+                "MIRFA SITE",
+                "FLATBED",
+                "per truck",
+                1500,
+                "",
+                1,
+                120,
+                "USD",
+                "A",
+            ],
+        ]
+        outp = Path("invoices_sample.csv")
+        with outp.open("w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(
+                [
+                    "shipment_ref",
+                    "origin",
+                    "destination",
+                    "vehicle",
+                    "unit",
+                    "rate_usd",
+                    "amount_usd",
+                    "quantity",
+                    "distance_km",
+                    "currency",
+                    "supplier_grade",
+                ]
+            )
+            w.writerows(sample)
+        print(f"Wrote sample: {outp.resolve()}")
+        return
+
+    if not args.inp:
+        print("Please provide --in invoices.csv (or use --sample to create one).")
+        return
+
+    inp = Path(args.inp)
+    if not inp.exists():
+        print(f"Input not found: {inp}")
+        return
+
+    ref_xlsx = Path(args.ref_xlsx) if args.ref_xlsx else None
+    try:
+        df = pd.read_csv(inp)
+    except Exception:
+        # try excel
+        try:
+            df = pd.read_excel(inp)
+        except Exception as e:
+            raise SystemExit(f"Failed to read input file {inp}: {e}")
+
+    result_df, recap, artifact = validate(df, ref_xlsx)
+
+    # Save result
+    out_path = Path(args.out)
+    try:
+        with pd.ExcelWriter(out_path, engine="openpyxl") as xw:
+            result_df.to_excel(xw, index=False, sheet_name="results")
+            # A small summary sheet
+            summary = pd.DataFrame(
+                [
+                    {"metric": "total", "value": len(result_df)},
+                    {
+                        "metric": "pass",
+                        "value": int((result_df["decision"] == "PASS").sum()),
+                    },
+                    {
+                        "metric": "pending_review",
+                        "value": int((result_df["decision"] == "PENDING_REVIEW").sum()),
+                    },
+                    {
+                        "metric": "fail",
+                        "value": int((result_df["decision"] == "FAIL").sum()),
+                    },
+                    {
+                        "metric": "automation_ready(≥0.95)",
+                        "value": int(result_df["automation_ready"].sum()),
+                    },
+                ]
+            )
+            summary.to_excel(xw, index=False, sheet_name="summary")
+            # artifact as json in a sheet
+            art = pd.DataFrame(
+                [{"proof_artifact_json": json.dumps(artifact, ensure_ascii=False)}]
+            )
+            art.to_excel(xw, index=False, sheet_name="artifact")
+    except Exception as e:
+        print(f"Could not write XLSX ({e}); writing CSVs instead.")
+        result_df.to_csv(out_path.with_suffix(".csv"), index=False)
+        with open(out_path.with_suffix(".artifact.json"), "w", encoding="utf-8") as f:
+            json.dump(artifact, f, ensure_ascii=False, indent=2)
+
+    # Also write artifact JSON separately for systems to consume
+    art_path = out_path.with_suffix(".artifact.json")
+    with open(art_path, "w", encoding="utf-8") as f:
+        json.dump(artifact, f, ensure_ascii=False, indent=2)
+
+    # Print recap.card for quick copy
+    print("\n=== recap.card ===")
+    print(recap)
+    print("\nSaved:", out_path.resolve())
+    print("Proof artifact:", art_path.resolve())
+
+
+if __name__ == "__main__":
+    main()

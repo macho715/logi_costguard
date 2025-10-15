@@ -1,0 +1,125 @@
+HVDC Invoice Audit System - Folder Structure
+Generated: 2025-10-12
+
+================================================================================
+ROOT: HVDC_Invoice_Audit/
+================================================================================
+
+HVDC_Invoice_Audit/
+│
+├── README.md                              # Project Overview
+├── QUICK_START.md                         # Quick Start Guide
+├── MIGRATION_COMPLETE_REPORT.md           # Migration Report
+├── FOLDER_STRUCTURE.txt                   # This File
+│
+├── 00_Shared/                             # Shared Libraries (Reserved)
+│   └── common/
+│
+├── 01_DSV_SHPT/                           # SHPT System (✅ Production Ready)
+│   │
+│   ├── README.md                          # SHPT System Guide
+│   │
+│   ├── Core_Systems/                      # Main Audit Systems
+│   │   ├── shpt_audit_system.py           (43KB, 1003 lines)
+│   │   ├── shpt_sept_2025_enhanced_audit.py (31KB, 690 lines)
+│   │   └── run_shpt_sept2025.py           (1.7KB)
+│   │
+│   ├── Results/                           # Audit Results
+│   │   └── Sept_2025/
+│   │       ├── JSON/
+│   │       │   └── shpt_sept_2025_enhanced_result_20251012_121143.json (188KB)
+│   │       ├── CSV/
+│   │       │   └── shpt_sept_2025_enhanced_result_20251012_121143.csv (81KB)
+│   │       ├── Reports/
+│   │       │   ├── shpt_sept_2025_enhanced_summary_20251012_121143.txt
+│   │       │   └── SHPT_SEPT_2025_FINAL_REPORT.md
+│   │       └── Logs/
+│   │
+│   ├── Data/                              # Invoice & Supporting Documents
+│   │   └── DSV 202509/
+│   │       ├── SCNT SHIPMENT DRAFT INVOICE (SEPT 2025).xlsm
+│   │       ├── SCNT SHIPMENT DRAFT INVOICE (SEPT 2025)_rev.xlsm
+│   │       ├── SCNT HVDC DRAFT INVOICE FOR DOMESTIC DELIVERY SEPTEMBER 2025.xlsx
+│   │       ├── SCNT Import (Sept 2025) - Supporting Documents/    (57 PDFs)
+│   │       └── SCNT Domestic (Sept 2025) - Supporting Documents/  (36 PDFs)
+│   │
+│   ├── Documentation/                     # System Documentation
+│   │   ├── SHPT_SYSTEM_UPDATE_SUMMARY.md
+│   │   ├── SYSTEM_ARCHITECTURE_FINAL.md
+│   │   └── Technical/
+│   │
+│   ├── Utilities/                         # Utility Scripts
+│   │   ├── joiners_enhanced.py
+│   │   ├── rules_enhanced.py
+│   │   └── sheet_range_analyzer.py
+│   │
+│   └── Legacy/                            # Legacy Systems (Reference)
+│       ├── audit_runner.py
+│       ├── audit_runner_improved.py
+│       ├── audit_runner_enhanced.py
+│       └── advanced_audit_runner.py
+│
+└── 02_DSV_DOMESTIC/                       # DOMESTIC System (🚧 Development)
+    │
+    ├── README.md                          # DOMESTIC System Guide
+    │
+    ├── Core_Systems/                      # Main Systems (TBD)
+    │   ├── domestic_audit_system.py       (TODO)
+    │   ├── domestic_sept_2025_audit.py    (TODO)
+    │   └── run_domestic_sept2025.py       (TODO)
+    │
+    ├── Results/                           # Results (Empty)
+    │   └── Sept_2025/
+    │       ├── JSON/
+    │       ├── CSV/
+    │       ├── Reports/
+    │       └── Logs/
+    │
+    ├── Data/                              # Data (Empty)
+    │   └── DSV_202509/
+    │
+    ├── Documentation/                     # Documentation
+    │   ├── DOMESTIC_SYSTEM_DOCUMENTATION.md
+    │   └── Technical/
+    │
+    └── Utilities/                         # Utilities (TBD)
+        ├── domestic_joiners.py            (TODO)
+        ├── domestic_rules.py              (TODO)
+        └── domestic_helpers.py            (TODO)
+
+================================================================================
+File Statistics
+================================================================================
+
+SHPT System:
+- Total Files: 176
+- Python Files: 10 (Core 3, Utilities 3, Legacy 4)
+- PDF Files: 93 (Import 57, Domestic 36)
+- Excel Files: 3 (2 XLSM, 1 XLSX)
+- Result Files: 4 (JSON, CSV, Summary, Report)
+- Documentation: 3 (2 MD + README)
+
+DOMESTIC System:
+- Total Files: 2
+- Python Files: 0 (Development Required)
+- Documentation: 2 (1 MD + README)
+
+Root Level:
+- Documentation: 4 (README, QUICK_START, MIGRATION_REPORT, STRUCTURE)
+
+================================================================================
+System Status
+================================================================================
+
+✅ SHPT: Production Ready
+   - Last Run: 2025-10-12 12:11:43
+   - Items: 102
+   - Pass: 35 (34.3%)
+   - PDFs: 93 mapped
+
+🚧 DOMESTIC: Under Development
+   - Status: Folder structure created
+   - Next: Core system development
+
+================================================================================
+

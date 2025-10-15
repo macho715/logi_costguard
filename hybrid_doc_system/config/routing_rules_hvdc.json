@@ -1,0 +1,214 @@
+{
+    "version": "1.0-hvdc",
+    "description": "HVDC Project Optimized Routing Rules - Samsung C&T + ADNOC/DSV",
+    "default_engine": "docling",
+    "daily_ade_budget_usd": 100.0,
+    "sensitivity_force_local": [
+        "contract",
+        "passport",
+        "price-sensitive",
+        "samsung_ct",
+        "adnoc"
+    ],
+    "hvdc_rules": [
+        {
+            "name": "invoice_boe_complex",
+            "priority": 1,
+            "when": {
+                "doc_type_in": [
+                    "invoice",
+                    "boe"
+                ],
+                "pages_gte": 3,
+                "table_density_gte": 0.25
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_invoice_complex",
+                "expected_cost_per_page_usd": 0.03
+            }
+        },
+        {
+            "name": "boe_fanr_moiat",
+            "priority": 2,
+            "when": {
+                "doc_type_in": [
+                    "boe"
+                ],
+                "metadata_contains_any": [
+                    "FANR",
+                    "MOIAT",
+                    "Customs"
+                ],
+                "pages_gte": 2
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_regulatory_document"
+            }
+        },
+        {
+            "name": "do_dn_simple",
+            "priority": 3,
+            "when": {
+                "doc_type_in": [
+                    "do",
+                    "dn"
+                ],
+                "pages_lte": 2,
+                "table_density_lte": 0.20
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "hvdc_simple_doc"
+            }
+        },
+        {
+            "name": "bl_multipage",
+            "priority": 4,
+            "when": {
+                "doc_type_in": [
+                    "bl"
+                ],
+                "pages_gte": 4
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_bl_multipage"
+            }
+        },
+        {
+            "name": "samsung_ct_priority",
+            "priority": 5,
+            "when": {
+                "metadata_contains_any": [
+                    "samsung_ct",
+                    "samsung c&t",
+                    "scnt"
+                ],
+                "sensitivity_in": [
+                    "price-sensitive",
+                    "contract"
+                ]
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "hvdc_samsung_ct_local_security"
+            }
+        },
+        {
+            "name": "adnoc_dsv_partnership",
+            "priority": 6,
+            "when": {
+                "metadata_contains_any": [
+                    "adnoc",
+                    "dsv"
+                ],
+                "sensitivity_in": [
+                    "contract",
+                    "price-sensitive"
+                ]
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "hvdc_adnoc_dsv_local"
+            }
+        },
+        {
+            "name": "table_dense_invoice",
+            "priority": 7,
+            "when": {
+                "table_density_gte": 0.30,
+                "pages_lte": 10
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_table_dense"
+            }
+        },
+        {
+            "name": "visual_relations_detect",
+            "priority": 8,
+            "when": {
+                "visual_relations": [
+                    "checkbox",
+                    "caption",
+                    "chart"
+                ]
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_visual_relations"
+            }
+        },
+        {
+            "name": "scan_skewed",
+            "priority": 9,
+            "when": {
+                "skew_deg_gte": 4.0
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_scan_skew"
+            }
+        },
+        {
+            "name": "long_document",
+            "priority": 10,
+            "when": {
+                "pages_gt": 12
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "hvdc_long_doc"
+            }
+        },
+        {
+            "name": "ade_budget_guard",
+            "priority": 90,
+            "when": {
+                "ade_budget_exceeded": true
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "hvdc_budget_guard"
+            }
+        },
+        {
+            "name": "engine_fallback",
+            "priority": 99,
+            "when": {
+                "engine_failed": true
+            },
+            "action": {
+                "engine": "swap",
+                "reason": "hvdc_fallback_swap"
+            }
+        }
+    ],
+    "metrics_emit": [
+        "latency_ms",
+        "engine",
+        "pages",
+        "table_density",
+        "ade_cost_usd",
+        "cache_hit",
+        "retries",
+        "doc_type",
+        "confidence_score"
+    ],
+    "hvdc_specific": {
+        "expected_doc_types": [
+            "invoice",
+            "boe",
+            "do",
+            "dn",
+            "bl",
+            "certificate"
+        ],
+        "expected_volume_per_month": 300,
+        "expected_pages_per_doc": 2.5,
+        "estimated_monthly_cost_usd": 22.5,
+        "notes": "HVDC Project average: 300 docs/month × 2.5 pages × $0.03/page = $22.50/month"
+    }
+}

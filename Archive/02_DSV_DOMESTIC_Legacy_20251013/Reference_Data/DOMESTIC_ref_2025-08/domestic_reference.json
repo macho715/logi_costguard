@@ -1,0 +1,20 @@
+{
+  "version": "ref-2.0-NO-LEAK",
+  "built_from": "DOMESTIC_with_distances.xlsx",
+  "lane_rows": 111,
+  "region_rows": 50,
+  "min_fare": {
+    "3 TON PU": 100.0,
+    "FB": 200.0,
+    "LOWBED": 614.83,
+    "FLATBED": 200.0,
+    "7 TON PU": 200.0,
+    "DEFAULT": 200.0
+  },
+  "adjusters": {
+    "FLATBED_HAZMAT": 1.15,
+    "FLATBED_CICPA": 1.08
+  },
+  "cutoff_date": "2025-09",
+  "no_leak_validated": true
+}

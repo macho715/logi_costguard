@@ -1,0 +1,179 @@
+{
+  "artifact_id": "DomesticAudit-20251012T123550Z",
+  "created_at_utc": "2025-10-12T12:35:50Z",
+  "config": {
+    "fx_usd_to_aed": 3.6725,
+    "cg_bands": [
+      [
+        2.0,
+        "PASS"
+      ],
+      [
+        5.0,
+        "WARN"
+      ],
+      [
+        10.0,
+        "HIGH"
+      ],
+      [
+        Infinity,
+        "CRITICAL"
+      ]
+    ],
+    "similarity": {
+      "weights": {
+        "origin": 0.35,
+        "dest": 0.35,
+        "vehicle": 0.1,
+        "distance": 0.1,
+        "rate": 0.1
+      },
+      "threshold": 0.6
+    },
+    "contract_tolerance_pct": 3.0,
+    "supplier_tolerance_pct": {
+      "A": 2.0,
+      "B": 3.0,
+      "C": 5.0
+    },
+    "auto_fail_pct": 15.0
+  },
+  "counts": {
+    "PASS": 5,
+    "CRITICAL": 2,
+    "HIGH": 1
+  },
+  "status": "FAIL",
+  "items": [
+    {
+      "shipment_ref": "HVDC-ADOPT-SCT-0066",
+      "origin_norm": "DSV Mussafah Yard",
+      "destination_norm": "MIRFA SITE",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 420.0,
+      "ref_rate_usd": 420.0,
+      "delta_pct": 0.0,
+      "cg_band": "PASS",
+      "similarity": 1.0,
+      "confidence": 1.0,
+      "risk_score": 0.0,
+      "decision": "PASS",
+      "flags": ""
+    },
+    {
+      "shipment_ref": "HVDC-DSV-MOSB-DSV-112",
+      "origin_norm": "Al Masaood (MOSB)",
+      "destination_norm": "DSV Mussafah Yard",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 200.0,
+      "ref_rate_usd": 200.0,
+      "delta_pct": 0.0,
+      "cg_band": "PASS",
+      "similarity": 1.0,
+      "confidence": 1.0,
+      "risk_score": 0.3,
+      "decision": "PASS",
+      "flags": "PER_KM_ANOMALY"
+    },
+    {
+      "shipment_ref": "HVDC-DSV-MOSB-SHU-101",
+      "origin_norm": "DSV M44 WAREHOUSE",
+      "destination_norm": "SHUWEIHAT Site",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 600.0,
+      "ref_rate_usd": 600.0,
+      "delta_pct": 0.0,
+      "cg_band": "PASS",
+      "similarity": 0.9533333333333333,
+      "confidence": 0.9766666666666666,
+      "risk_score": 0.0,
+      "decision": "PASS",
+      "flags": ""
+    },
+    {
+      "shipment_ref": "HVDC-DSV-MOSB-ALM-117",
+      "origin_norm": "Mina Zayed Port",
+      "destination_norm": "Mina Zayed Port",
+      "vehicle_norm": "LOWBED",
+      "unit": "per truck",
+      "rate_usd": 980.26,
+      "ref_rate_usd": 980.26,
+      "delta_pct": 0.0,
+      "cg_band": "PASS",
+      "similarity": 1.0,
+      "confidence": 1.0,
+      "risk_score": 0.0,
+      "decision": "PASS",
+      "flags": ""
+    },
+    {
+      "shipment_ref": "HVDC-KEC-DIP-098",
+      "origin_norm": "Kec Dip Dubai",
+      "destination_norm": "SHUWEIHAT Site",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 980.0,
+      "ref_rate_usd": 600.0,
+      "delta_pct": 63.33333333333333,
+      "cg_band": "CRITICAL",
+      "similarity": 0.5038461538461538,
+      "confidence": 0.4519230769230769,
+      "risk_score": 0.25333333333333335,
+      "decision": "PENDING_REVIEW",
+      "flags": "LOW_SIMILARITY"
+    },
+    {
+      "shipment_ref": "HVDC-OD-UNKNOWN",
+      "origin_norm": "Random Yard",
+      "destination_norm": "Unknown Site",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 450.0,
+      "ref_rate_usd": 420.0,
+      "delta_pct": 7.142857142857142,
+      "cg_band": "HIGH",
+      "similarity": 0.571948051948052,
+      "confidence": 0.7145454545454546,
+      "risk_score": 0.02857142857142857,
+      "decision": "PENDING_REVIEW",
+      "flags": "LOW_SIMILARITY"
+    },
+    {
+      "shipment_ref": "HVDC-AED-TEST",
+      "origin_norm": "DSV Mussafah Yard",
+      "destination_norm": "MIRFA SITE",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 420.0,
+      "ref_rate_usd": 420.0,
+      "delta_pct": 0.0,
+      "cg_band": "PASS",
+      "similarity": 1.0,
+      "confidence": 1.0,
+      "risk_score": 0.0,
+      "decision": "PASS",
+      "flags": ""
+    },
+    {
+      "shipment_ref": "HVDC-ANOMALY",
+      "origin_norm": "DSV Mussafah Yard",
+      "destination_norm": "MIRFA SITE",
+      "vehicle_norm": "FLATBED",
+      "unit": "per truck",
+      "rate_usd": 1500.0,
+      "ref_rate_usd": 420.0,
+      "delta_pct": 257.14285714285717,
+      "cg_band": "CRITICAL",
+      "similarity": 1.0,
+      "confidence": 0.7,
+      "risk_score": 1.0,
+      "decision": "FAIL",
+      "flags": "PER_KM_ANOMALY|AUTO_FAIL"
+    }
+  ],
+  "proof_hash_sha256": "84c8296fd5ff72576fd518d606d9c60bb58bc4651b527abf5dfc11f1b79f44a7"
+}

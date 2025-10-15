@@ -1,0 +1,14 @@
+# Procfile.dev — No-Docker multi-process runtime
+# web / worker 를 한 번에 기동 (Honcho/Foreman 호환)
+
+# FastAPI Upload Service (Port 8080)
+web: uvicorn hybrid_doc_system.api.main:app --host 0.0.0.0 --port 8080 --reload
+
+# Celery Worker (Windows 환경: -P solo 권장)
+# --concurrency=2: 2개 작업 동시 처리
+# --max-tasks-per-child=100: 메모리 누수 방지
+worker: celery -A hybrid_doc_system.worker.celery_app worker -l info -P solo --concurrency=2 --max-tasks-per-child=100
+
+# Celery Beat (주기적 작업, 선택적)
+# beat: celery -A hybrid_doc_system.worker.celery_app beat -l info
+

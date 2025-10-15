@@ -1,0 +1,456 @@
+version: "1.0-hvdc"
+info:
+  title: Unified Document IR for HVDC Logistics (Extended)
+  description: |
+    Engine-agnostic intermediate representation for Docling/ADE outputs.
+    Extended with HVDC-specific fields for BOE, DO, DN, and Gate validation.
+  project: HVDC Invoice Audit System
+  systems: [SHPT, DOMESTIC]
+
+components:
+  types:
+    BBox:
+      type: object
+      description: Bounding box coordinates for visual elements
+      properties:
+        page: {type: integer, description: "Page number (1-indexed)"}
+        x0: {type: number, description: "Left coordinate"}
+        y0: {type: number, description: "Top coordinate"}
+        x1: {type: number, description: "Right coordinate"}
+        y1: {type: number, description: "Bottom coordinate"}
+
+    Block:
+      type: object
+      description: Generic content block (text, table, figure, etc.)
+      required: [type]
+      properties:
+        id: {type: string, description: "Unique block identifier"}
+        type:
+          type: string
+          enum: [text, table, figure, header, footer, field, checkbox, signature]
+          description: "Block content type"
+        text: {type: string, description: "Text content (if type=text)"}
+        table:
+          type: object
+          description: "Table data (if type=table)"
+          properties:
+            rows:
+              type: array
+              items: {type: array, items: {type: string}}
+              description: "Table rows as nested arrays"
+            header: {type: boolean, description: "Whether first row is header"}
+        bbox:
+          $ref: '#/components/types/BBox'
+          description: "Visual location on page"
+        meta:
+          type: object
+          description: "Block metadata"
+          properties:
+            confidence: {type: number, minimum: 0, maximum: 1}
+            source_engine: {type: string, enum: [docling, ade, dsvparser]}
+            page_idx: {type: integer}
+            relations:
+              type: array
+              description: "Relationships to other blocks"
+              items:
+                type: object
+                properties:
+                  type: {type: string, description: "Relation type"}
+                  target_id: {type: string, description: "Target block ID"}
+
+    RoutingDecision:
+      type: object
+      description: "Hybrid parser routing decision metadata"
+      required: [rule_matched, engine_choice]
+      properties:
+        rule_matched: {type: string, description: "Rule name from routing_rules_hvdc.json"}
+        reason: {type: string, description: "Human-readable reason for routing"}
+        engine_choice: {type: string, enum: [docling, ade]}
+        confidence: {type: number, minimum: 0, maximum: 1}
+        fallback_used: {type: boolean, default: false}
+        latency_ms: {type: integer, description: "Parsing latency in milliseconds"}
+        ade_cost_usd: {type: number, description: "ADE API cost (if applicable)"}
+
+    GateValidationResult:
+      type: object
+      description: "Single gate validation result"
+      required: [gate_id, status]
+      properties:
+        gate_id: {type: string, enum: [gate-11, gate-12, gate-13, gate-14]}
+        status: {type: string, enum: [PASS, FAIL, SKIP, ERROR]}
+        details: {type: string, description: "Validation details or failure reason"}
+        checked_fields: {type: array, items: {type: string}}
+        timestamp: {type: string, format: date-time}
+
+document:
+  type: object
+  description: "Complete document representation in Unified IR format"
+  required: [doc_id, engine, blocks]
+  properties:
+    doc_id:
+      type: string
+      description: "Unique document identifier (UUID or hash)"
+
+    engine:
+      type: string
+      enum: [docling, ade, dsvparser]
+      description: "Parsing engine used"
+
+    routing_decision:
+      $ref: '#/components/types/RoutingDecision'
+      description: "Hybrid router decision metadata"
+
+    pages:
+      type: integer
+      minimum: 1
+      description: "Total number of pages"
+
+    meta:
+      type: object
+      description: "Document-level metadata"
+      properties:
+        filename: {type: string}
+        mime: {type: string, example: "application/pdf"}
+        created_at: {type: string, format: date-time}
+        checksum_sha256: {type: string, pattern: "^[a-f0-9]{64}$"}
+        file_size_bytes: {type: integer}
+        doc_type:
+          type: string
+          enum: [BOE, DO, DN, CarrierInvoice, Invoice, Other]
+          description: "HVDC document type classification"
+        shipment_id:
+          type: string
+          pattern: "^HVDC-[A-Z]+-[A-Z]+-\\d+$"
+          example: "HVDC-ADOPT-SCT-0126"
+          description: "HVDC shipment identifier"
+
+    blocks:
+      type: array
+      items: {$ref: '#/components/types/Block'}
+      description: "Parsed content blocks (text, tables, figures, etc.)"
+
+    hvdc_fields:
+      type: object
+      description: "HVDC logistics-specific extracted fields"
+      properties:
+
+        boe_fields:
+          type: object
+          description: "Bill of Entry specific fields"
+          properties:
+            entry_no:
+              type: string
+              description: "Customs entry number"
+              example: "AUH-2025-001234"
+            customs_office:
+              type: string
+              description: "Customs office location"
+              example: "Abu Dhabi Port Customs"
+            hs_code_classifications:
+              type: array
+              items:
+                type: object
+                properties:
+                  hs_code: {type: string, pattern: "^\\d{4,10}$"}
+                  description: {type: string}
+                  quantity: {type: number}
+                  unit: {type: string}
+              description: "HS Code items from BOE"
+            mbl_no:
+              type: string
+              description: "Master Bill of Lading number"
+              example: "MAEU123456789"
+            containers:
+              type: array
+              items: {type: string, pattern: "^[A-Z]{4}\\d{7}$"}
+              description: "Container numbers"
+              example: ["TCLU1234567", "MSCU9876543"]
+            gross_weight:
+              type: number
+              description: "Total gross weight"
+            gross_weight_unit:
+              type: string
+              enum: [KG, TON, LB]
+              default: "KG"
+            vessel_name: {type: string}
+            port_of_loading: {type: string}
+            port_of_discharge: {type: string}
+
+        do_fields:
+          type: object
+          description: "Delivery Order specific fields"
+          properties:
+            do_number:
+              type: string
+              description: "Delivery Order reference number"
+            do_validity_date:
+              type: string
+              format: date
+              description: "DO expiry date for demurrage calculation"
+            container_release_dates:
+              type: array
+              items:
+                type: object
+                properties:
+                  container_no: {type: string}
+                  release_date: {type: string, format: date}
+            demurrage_risk_level:
+              type: string
+              enum: [LOW, MEDIUM, HIGH, CRITICAL]
+              description: "Risk assessment for demurrage charges"
+            estimated_demurrage_usd:
+              type: number
+              description: "Estimated demurrage cost if not released on time"
+            free_days_remaining: {type: integer}
+
+        dn_fields:
+          type: object
+          description: "Delivery Note (Domestic) specific fields"
+          properties:
+            origin:
+              type: string
+              description: "Loading point / origin location"
+              example: "Khalifa Port"
+            destination:
+              type: string
+              description: "Delivery destination"
+              example: "MIRFA Site"
+            vehicle_type:
+              type: string
+              enum: [Flatbed, Lowbed, Normal Trailer, Hydraulic Trailer]
+              description: "Vehicle type used for transportation"
+            destination_code:
+              type: string
+              description: "Destination code for lane matching"
+            do_reference:
+              type: string
+              description: "Referenced DO number (if applicable)"
+            driver_info:
+              type: object
+              properties:
+                name: {type: string}
+                license: {type: string}
+                phone: {type: string}
+
+        carrier_invoice_fields:
+          type: object
+          description: "Carrier Invoice specific fields"
+          properties:
+            carrier_name: {type: string}
+            invoice_number: {type: string}
+            invoice_date: {type: string, format: date}
+            total_amount: {type: number}
+            currency: {type: string, pattern: "^[A-Z]{3}$"}
+            line_items:
+              type: array
+              items:
+                type: object
+                properties:
+                  description: {type: string}
+                  quantity: {type: number}
+                  unit_price: {type: number}
+                  total: {type: number}
+
+    gate_validation:
+      type: object
+      description: "Gate validation results (Gate-11 through Gate-14)"
+      properties:
+        validated_at: {type: string, format: date-time}
+        overall_status: {type: string, enum: [ALL_PASS, PARTIAL_FAIL, ALL_FAIL, NOT_VALIDATED]}
+        gates:
+          type: array
+          items: {$ref: '#/components/types/GateValidationResult'}
+          description: "Individual gate validation results"
+        cross_document_refs:
+          type: array
+          items:
+            type: object
+            properties:
+              doc_id: {type: string}
+              doc_type: {type: string}
+              relationship: {type: string}
+          description: "Related documents used in validation"
+
+mapping:
+  description: "Field extraction patterns and selectors"
+
+  invoice:
+    selectors:
+      invoice_no:
+        any:
+          - regex: "(Invoice No\\.?|INV\\.? No\\.?)\\s*[:#]?\\s*([A-Za-z0-9\\-_/]+)"
+            group: 2
+      bl_no:
+        any:
+          - regex: "(B\\/L|BL|Bill of Lading)\\s*(No\\.?|#)\\s*[:#]?\\s*([A-Za-z0-9\\-_/]+)"
+            group: 3
+      incoterms:
+        any:
+          - regex: "\\b(EXW|FOB|CIF|CFR|DAP|DDP|FCA|CPT|CIP|DPU)\\b"
+            group: 1
+      hs_code:
+        any:
+          - regex: "\\b(\\d{4}\\.\\d{2}\\.\\d{2}|\\d{6,10})\\b"
+            group: 1
+      qty:
+        any:
+          - regex: "\\bQty\\s*[:#]?\\s*(\\d+(?:\\.\\d+)?)\\b"
+            group: 1
+      unit:
+        any:
+          - regex: "\\b(PC|PCS|PKG|PKGS|SET|EA|KG|TON|CBM)\\b"
+            group: 1
+      subtotal:
+        any:
+          - regex: "(Sub[- ]?Total)\\s*[:]?\\s*([0-9,]+\\.?\\d*)"
+            group: 2
+      vat:
+        any:
+          - regex: "(VAT|Tax)\\s*[:]?\\s*([0-9,]+\\.?\\d*)"
+            group: 2
+      grand_total:
+        any:
+          - regex: "(Grand\\s*Total|Total\\s*Amount)\\s*[:]?\\s*([0-9,]+\\.?\\d*)"
+            group: 2
+
+  boe:
+    selectors:
+      entry_no:
+        any:
+          - regex: "(Entry No\\.?|BE No\\.?)\\s*[:#]?\\s*([A-Z]{3}-\\d{4}-\\d+)"
+            group: 2
+      mbl_no:
+        any:
+          - regex: "(MBL|Master B\\/L|MAWB)\\s*(No\\.?|#)?\\s*[:#]?\\s*([A-Z]{4}\\d{9,})"
+            group: 3
+      container_no:
+        any:
+          - regex: "\\b([A-Z]{4}\\d{7})\\b"
+            group: 1
+      hs_code:
+        any:
+          - regex: "(HS Code|HSN|Tariff Code)\\s*[:#]?\\s*(\\d{4,10})"
+            group: 2
+      gross_weight:
+        any:
+          - regex: "(Gross Weight|G\\.W\\.|Total Weight)\\s*[:#]?\\s*([\\d,]+\\.?\\d*)\\s*(KG|TON)?"
+            group: 2
+
+  do:
+    selectors:
+      do_number:
+        any:
+          - regex: "(DO No\\.?|Delivery Order)\\s*[:#]?\\s*([A-Za-z0-9\\-_/]+)"
+            group: 2
+      validity_date:
+        any:
+          - regex: "(Valid Until|Expiry Date|Validity)\\s*[:#]?\\s*(\\d{1,2}[\\/\\-]\\d{1,2}[\\/\\-]\\d{2,4})"
+            group: 2
+      container_no:
+        any:
+          - regex: "(Container No\\.?|CNTR)\\s*[:#]?\\s*([A-Z]{4}\\d{7})"
+            group: 2
+
+  dn:
+    selectors:
+      origin:
+        any:
+          - regex: "(Loading Point|Origin|From)\\s*[:#]?\\s*([A-Za-z\\s]+(?:Port|Site|Yard))"
+            group: 2
+      destination:
+        any:
+          - regex: "(Destination|Delivery To|To)\\s*[:#]?\\s*([A-Za-z\\s]+(?:Site|Yard|Location))"
+            group: 2
+      vehicle_type:
+        any:
+          - regex: "(Vehicle Type|Truck Type)\\s*[:#]?\\s*(Flatbed|Lowbed|Normal Trailer|Hydraulic Trailer)"
+            group: 2
+      destination_code:
+        any:
+          - regex: "(Dest\\.? Code|Location Code)\\s*[:#]?\\s*([A-Z0-9\\-]+)"
+            group: 2
+      do_ref:
+        any:
+          - regex: "(DO Ref|DO #|Reference DO)\\s*[:#]?\\s*([A-Za-z0-9\\-_/]+)"
+            group: 2
+
+validation_rules:
+  description: "HVDC-specific validation rules for parsed documents"
+
+  gate_11_mbl_consistency:
+    description: "Verify MBL number consistency across Invoice, BOE, DO"
+    applies_to: [BOE, DO]
+    logic: |
+      - Extract MBL from BOE (boe_fields.mbl_no)
+      - Extract MBL from DO (if present)
+      - Compare with Invoice MBL
+      - Status: PASS if all match, FAIL if mismatch
+
+  gate_12_container_validation:
+    description: "Validate container numbers across documents"
+    applies_to: [BOE, DO]
+    logic: |
+      - Extract containers from BOE (boe_fields.containers)
+      - Extract containers from DO
+      - Compare with Invoice container list
+      - Status: PASS if consistent, FAIL if discrepancy
+
+  gate_13_weight_tolerance:
+    description: "Weight comparison with ±3% tolerance"
+    applies_to: [BOE]
+    logic: |
+      - Extract gross_weight from BOE
+      - Compare with Invoice weight
+      - Calculate variance percentage
+      - Status: PASS if |variance| <= 3%, FAIL if exceeds
+
+  gate_14_qty_date_logic:
+    description: "Quantity and date consistency validation"
+    applies_to: [BOE, DO, DN]
+    logic: |
+      - Verify quantities match across documents
+      - Check date logic: BL Date <= Invoice Date <= DO Validity
+      - Status: PASS if logical, FAIL if inconsistent
+
+performance_requirements:
+  parsing:
+    max_latency_ms: 10000
+    min_success_rate: 0.95
+    min_confidence: 0.90
+
+  validation:
+    gate_accuracy_target: 0.98
+    max_false_positive_rate: 0.02
+
+  cost:
+    ade_daily_budget_usd: 50.0
+    docling_preferred_for_cost: true
+
+examples:
+  boe_document:
+    doc_id: "hvdc-boe-001"
+    engine: "ade"
+    routing_decision:
+      rule_matched: "boe_table_dense"
+      reason: "BOE with dense tables - ADE excels at table extraction"
+      engine_choice: "ade"
+      confidence: 0.97
+    pages: 3
+    meta:
+      filename: "HVDC-ADOPT-SCT-0126_BOE.pdf"
+      doc_type: "BOE"
+      shipment_id: "HVDC-ADOPT-SCT-0126"
+    hvdc_fields:
+      boe_fields:
+        entry_no: "AUH-2025-001234"
+        mbl_no: "MAEU123456789"
+        containers: ["TCLU1234567"]
+        gross_weight: 15000.5
+        gross_weight_unit: "KG"
+    gate_validation:
+      overall_status: "ALL_PASS"
+      gates:
+        - gate_id: "gate-11"
+          status: "PASS"
+          details: "MBL consistent across all documents"
+

@@ -1,0 +1,242 @@
+# HVDC PDF Parser System Configuration
+# =====================================
+# Version: 1.0.0
+# Last Updated: 2025-10-13
+
+# OCR 엔진 설정
+ocr:
+  engines:
+    - name: "AWS Textract"
+      priority: 1
+      use_case: "복잡한 테이블 구조 문서"
+      cost_per_page: 0.0015
+      confidence_threshold: 0.95
+      enabled: false  # AWS 자격증명 필요
+
+    - name: "Google Document AI"
+      priority: 2
+      use_case: "다국어 혼재 문서"
+      cost_per_page: 0.0010
+      confidence_threshold: 0.93
+      enabled: false  # Google Cloud 자격증명 필요
+
+    - name: "Azure Form Recognizer"
+      priority: 3
+      use_case: "표준 양식 문서"
+      cost_per_page: 0.0010
+      confidence_threshold: 0.92
+      enabled: false  # Azure 자격증명 필요
+
+  # OCR 후처리 설정
+  post_processing:
+    min_confidence: 0.90  # 이하는 manual_review 플래그
+    auto_correct_formats: true  # HS Code, 날짜, 금액 자동 보정
+    reconstruct_tables: true  # 줄바꿈/병합 셀 복원
+
+# 검증 규칙
+validation:
+  # Cross-document 검증
+  cross_document:
+    qty_tolerance: 0  # 수량: 정확히 일치
+    weight_tolerance: 0.03  # 무게: ±3% 허용
+    date_tolerance_days: 1  # 날짜: 1일 허용
+
+  # UAE 규제 준수
+  compliance:
+    moiat:
+      hs_code_prefixes: ["84", "85"]  # 전기/기계
+      lead_time_days: 14
+
+    fanr:
+      hs_code_prefixes: ["2844"]  # 핵물질
+      keywords: ["radioactive", "nuclear", "isotope"]
+      lead_time_days: 30
+
+    dcd:
+      keywords: ["hazmat", "dangerous", "un_no"]
+      lead_time_days: 21
+
+    oog:
+      max_standard_weight: 25000  # kg
+      requires_permit: true
+      lead_time_days: 7
+
+# 파일 처리 설정
+files:
+  supported_formats:
+    - "pdf"
+    - "png"
+    - "jpeg"
+    - "tiff"
+
+  max_file_size_mb: 50
+  max_pages: 100
+  min_dpi: 300  # 이미지 권장 DPI
+
+  # 입력/출력 디렉토리
+  paths:
+    input_dir: "./input"
+    output_dir: "./output"
+    temp_dir: "./temp"
+    rdf_output: "./output/ontology"
+
+# 온톨로지 설정
+ontology:
+  base_uri: "http://samsung.com/hvdc-project#"
+  namespaces:
+    logistics: "http://samsung.com/project-logistics#"
+
+  export_formats:
+    - "turtle"  # .ttl
+    - "rdfxml"  # .rdf
+    - "json-ld"  # .jsonld
+
+  sparql_endpoint: null  # 외부 SPARQL 엔드포인트 (선택사항)
+
+# 알림 설정
+notifications:
+  telegram:
+    enabled: false
+    bot_token: ""  # 환경변수 TELEGRAM_BOT_TOKEN 사용 권장
+    channel_id: ""  # 예: @hvdc-alerts
+
+  slack:
+    enabled: false
+    webhook_url: ""  # Slack Incoming Webhook URL
+
+  email:
+    enabled: false
+    smtp_server: ""
+    smtp_port: 587
+    sender: ""
+    recipients: []
+
+  # 알림 트리거 조건
+  triggers:
+    on_validation_fail: true
+    on_demurrage_risk: true
+    on_missing_certification: true
+    on_mbl_mismatch: true
+
+# Demurrage/Detention 리스크 체크
+demurrage:
+  enabled: true
+  warning_days_before_expiry: 3  # DO Validity 만료 3일 전 경고
+  check_interval_hours: 24  # 24시간마다 체크
+
+  cost_estimates:
+    per_day_usd: 75  # 컨테이너당 일일 비용 (예상)
+    currency: "USD"
+
+# 성능 설정
+performance:
+  max_concurrent_processing: 10  # 동시 처리 최대 파일 수
+  ocr_timeout_seconds: 120
+  validation_timeout_seconds: 30
+
+  # 캐싱
+  cache:
+    enabled: true
+    ttl_seconds: 3600  # 1시간
+    max_size_mb: 500
+
+# 로깅 설정
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  file:
+    enabled: true
+    path: "./logs/pdf_parser.log"
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+
+  console:
+    enabled: true
+    colorized: true
+
+# 데이터베이스 설정 (선택사항)
+database:
+  enabled: false
+  type: "postgresql"  # postgresql, mysql, sqlite
+  host: "localhost"
+  port: 5432
+  name: "hvdc_logistics"
+  user: ""
+  password: ""  # 환경변수 사용 권장
+
+# API 설정 (FastAPI)
+api:
+  enabled: false
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+
+  # CORS
+  cors:
+    allow_origins: ["*"]
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+  # 인증
+  auth:
+    enabled: false
+    api_key_header: "X-API-Key"
+    api_keys: []  # 환경변수로 관리 권장
+
+# 문서 타입별 파싱 설정
+document_types:
+  BOE:  # Bill of Entry
+    priority_fields:
+      - "dec_no"
+      - "mbl_no"
+      - "containers"
+      - "hs_code"
+      - "duty_aed"
+      - "vat_aed"
+    ocr_confidence_min: 0.95
+
+  DO:  # Delivery Order
+    priority_fields:
+      - "do_number"
+      - "mbl_no"
+      - "containers"
+      - "delivery_valid_until"
+    ocr_confidence_min: 0.90
+
+  DN:  # Delivery Note
+    priority_fields:
+      - "waybill_no"
+      - "container_no"
+      - "loading_date"
+      - "driver_name"
+    ocr_confidence_min: 0.90
+
+  CarrierInvoice:
+    priority_fields:
+      - "invoice_number"
+      - "bl_number"
+      - "total_incl_tax"
+      - "currency"
+    ocr_confidence_min: 0.95
+
+# 통합 워크플로우 설정
+workflow:
+  auto_process_on_upload: false
+  auto_validate_ontology: true
+  auto_generate_report: true
+  auto_send_notifications: false
+
+  # 배치 처리
+  batch:
+    enabled: true
+    schedule: "0 8 * * *"  # Cron 표현식: 매일 8시
+    max_batch_size: 50
+
+# 테스트 설정
+testing:
+  sample_data_dir: "./tests/samples"
+  mock_ocr: true  # 테스트 시 실제 OCR 대신 목 데이터 사용
+  skip_external_api: true  # 외부 API 호출 스킵
+

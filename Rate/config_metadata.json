@@ -1,0 +1,37 @@
+{
+    "version": "1.0.0",
+    "applicable_period": "2025-09",
+    "forwarder": "DSV",
+    "project": "HVDC_ADOPT",
+    "currency_fx_date": "2025-09-30",
+    "fx_rates": {
+        "USD_AED": 3.6725,
+        "last_updated": "2025-09-30"
+    },
+    "last_updated": "2025-10-14",
+    "created_by": "MACHO-GPT v3.4-mini",
+    "description": "Configuration metadata for DSV HVDC ADOPT project - September 2025",
+    "dependencies": {
+        "config_shpt_lanes": "1.1.0",
+        "config_contract_rates": "1.0.0",
+        "config_cost_guard_bands": "1.0.0",
+        "config_validation_rules": "1.0.0"
+    },
+    "validation_thresholds": {
+        "confidence_minimum": 0.95,
+        "success_rate_target": 0.95,
+        "gate_pass_threshold": 0.75
+    },
+    "changelog": [
+        {
+            "version": "1.0.0",
+            "date": "2025-10-14",
+            "changes": [
+                "Initial metadata configuration",
+                "TRANSPORTATION Lane Map integration",
+                "Fixed rates for DO FEE and CUSTOMS CLEARANCE",
+                "Portal Fee validation logic"
+            ]
+        }
+    ]
+}

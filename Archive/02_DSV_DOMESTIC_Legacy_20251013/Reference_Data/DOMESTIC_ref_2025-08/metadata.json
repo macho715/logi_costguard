@@ -1,0 +1,15 @@
+{
+  "cutoff_date": "2025-09",
+  "cutoff_timestamp": "2025-09-01T00:00:00",
+  "created_at": "2025-10-13T08:41:39.052037",
+  "source_ledger": "DOMESTIC_with_distances.xlsx",
+  "total_records_source": 519,
+  "total_records_filtered": 519,
+  "excluded_records": 0,
+  "lane_count": 111,
+  "region_count": 50,
+  "min_fare_count": 6,
+  "sha256": "b7fa14af8788399b9011666cf8bf726a4a7ec057718afb13347d0948f45d16f1",
+  "version": "ref-2.0-NO-LEAK",
+  "no_leak_validated": true
+}

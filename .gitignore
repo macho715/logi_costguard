@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.benchmarks/
+
+# Output
+out/
+outputs/
+Results/
+*.xlsx
+*.xlsm
+*.csv
+*.pdf
+!**/Rate/*.json
+!**/Rate/*.md
+
+# Cache
+hybrid_cache/
+*.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/
+temp/
+
+# Data directories (contain sensitive invoice data)
+**/Data/
+**/SCNT*/
+**/Supporting Documents/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution
+dist/
+build/
+*.egg-info/
+

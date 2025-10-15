@@ -1,0 +1,95 @@
+{
+    "version": "v2.1_enhanced",
+    "description": "Enhanced DOMESTIC validation config with 7-step patch (CRITICAL 18→single digit)",
+    "similarity": {
+        "weights": {
+            "origin": 0.35,
+            "destination": 0.35,
+            "vehicle": 0.10,
+            "distance": 0.10,
+            "rate": 0.10
+        },
+        "distance_decay_km": 15.0,
+        "rate_decay_pct": 30.0,
+        "edge_threshold": 0.60,
+        "dynamic": {
+            "enabled": true,
+            "min_threshold": 0.50,
+            "use_distance": true
+        }
+    },
+    "min_fare_model": {
+        "enabled": true,
+        "short_run_km": 10.0,
+        "table": {
+            "FLATBED": 200.0,
+            "LOWBED": 600.0,
+            "3 TON PU": 150.0,
+            "7 TON PU": 200.0,
+            "DEFAULT": 200.0
+        }
+    },
+    "region_rules": {
+        "MUSSAFAH": [
+            "MUSSAFAH",
+            "ICAD",
+            "MARKAZ",
+            "M44",
+            "PRESTIGE"
+        ],
+        "MINA": [
+            "MINA",
+            "FREEPORT",
+            "ZAYED",
+            "JDN",
+            "PORT"
+        ],
+        "MIRFA": [
+            "MIRFA",
+            "PMO"
+        ],
+        "SHUWEIHAT": [
+            "SHUWEIHAT",
+            "S2",
+            "S3",
+            "POWER"
+        ]
+    },
+    "fallbacks": {
+        "use_region_pool": true,
+        "km_tolerance": 15.0,
+        "perkm_tolerance_pct": 30.0
+    },
+    "adjusters": {
+        "enabled": true,
+        "rules": [
+            {
+                "if_vehicle_contains": "HAZMAT",
+                "rate_multiplier": 1.15,
+                "description": "Hazardous materials surcharge"
+            },
+            {
+                "if_vehicle_contains": "CICPA",
+                "rate_multiplier": 1.08,
+                "description": "CICPA security control surcharge"
+            }
+        ]
+    },
+    "confidence_gate": {
+        "enabled": true,
+        "min_similarity": 0.70,
+        "min_confidence": 0.92,
+        "auto_verify_bands": [
+            "PASS",
+            "WARN"
+        ]
+    },
+    "under_charge_buffer": {
+        "enabled": true,
+        "description": "Route negative delta CRITICAL to PENDING_REVIEW for verification"
+    },
+    "alias_suggestion": {
+        "enabled": true,
+        "min_similarity": 0.70
+    }
+}

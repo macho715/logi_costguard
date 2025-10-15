@@ -1,0 +1,44 @@
+# Hybrid Doc System Dependencies (WSL2 + Redis + Honcho)
+# No Docker - Local Development Runtime
+
+# ==================== FastAPI + ASGI ====================
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# ==================== Celery + Redis ====================
+celery[redis]==5.3.4
+redis>=4.5.2,<5.0.0
+
+# ==================== PDF Parsing Engines ====================
+# Docling (로컬, 무료, 멀티포맷) - 선택적 (복잡한 의존성으로 제외 가능)
+# docling==1.0.0
+
+# ADE (LandingAI) - 선택적 (클라우드, 유료)
+# landing-ai-sdk==0.1.0
+
+# ==================== Utilities ====================
+python-dotenv==1.0.0
+pyyaml==6.0.1
+pydantic==2.5.0
+requests>=2.31.0
+
+# ==================== Process Management ====================
+honcho==1.1.0
+
+# ==================== HVDC Audit (기존) ====================
+pandas>=2.1.3
+openpyxl==3.1.2
+pdfplumber==0.10.3
+
+# ==================== Development Tools ====================
+pytest==7.4.3
+pytest-mock==3.12.0
+black==23.11.0
+ruff==0.1.6
+
+# ==================== Optional: Fast Package Manager ====================
+# uv로 설치 시 훨씬 빠름 (선택)
+# pip install uv
+# uv pip install -r requirements_hybrid.txt
+

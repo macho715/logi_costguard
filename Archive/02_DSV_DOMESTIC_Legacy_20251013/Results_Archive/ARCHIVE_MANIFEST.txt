@@ -1,0 +1,91 @@
+# Results Archive Manifest
+# Created: 2025-10-13 23:11:00
+# Purpose: Archive of intermediate Excel files and data from Sept_2025 validation
+
+## Archive Summary
+- Total files moved: 51
+- Excel files: 36
+- Data folders: 3 (CSV, JSON, Final_Validation)
+- Archive location: Archive/02_DSV_DOMESTIC_Legacy_20251013/Results_Archive/
+
+## Files Moved to Intermediate_Excel/
+
+### PDF_Validation_Series/ (17 files)
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_202414.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_202812.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_203514.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_203726.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_204554.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_211115.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_211203.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_212536.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_212701.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_213857.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_213958.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_214652.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_215126.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_221157.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_221312.xlsx
+domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_221959.xlsx
+
+### Advanced_Series/ (9 files)
+domestic_sept_2025_advanced_v2_report.xlsx
+domestic_sept_2025_advanced_v3_FINAL.xlsx
+domestic_sept_2025_advanced_v3_NO_LEAK_WITH_LANEMAP_ENHANCED.xlsx
+domestic_sept_2025_advanced_v3_NO_LEAK_WITH_LANEMAP.xlsx
+domestic_sept_2025_advanced_v3_NO_LEAK.xlsx
+domestic_sept_2025_advanced_v3_report.xlsx
+DOMESTIC_SEPT_2025_FINAL_EXECUTIVE_REPORT.xlsx
+DOMESTIC_SEPT_2025_FINAL_REPORT.xlsx
+DOMESTIC_SEPT_2025_PHASE8_FINAL_REPORT.xlsx
+
+### Patched_Series/ (10 files)
+domestic_patched_artifact.json
+domestic_patched_report.xlsx
+domestic_sept_2025_interpolated_20251013_015906.xlsx
+domestic_sept_2025_patched_artifact.json
+domestic_sept_2025_patched_report.xlsx
+domestic_sept_2025_result_20251013_012914.xlsx
+domestic_sept_2025_result_20251013_013624.xlsx
+domestic_sept_2025_result_20251013_014944.xlsx
+domestic_with_distances_artifact.json
+sept_2025_parsed.csv
+
+## Folders Moved to Intermediate_Data/
+
+### CSV/ (4 files)
+domestic_sept_2025_interpolated_20251013_015906.csv
+domestic_sept_2025_result_20251013_012914.csv
+domestic_sept_2025_result_20251013_013624.csv
+domestic_sept_2025_result_20251013_014944.csv
+
+### JSON/ (3 files)
+domestic_sept_2025_result_20251013_012914.json
+domestic_sept_2025_result_20251013_013624.json
+domestic_sept_2025_result_20251013_014944.json
+
+### Final_Validation/ (2 files)
+items.csv
+proof.artifact.json
+
+## Files Retained in Production
+
+### Results/Sept_2025/ (Final State)
+- domestic_sept_2025_FINAL_WITH_PDF_VALIDATION_20251013_223544.xlsx (Latest FINAL - 25,185 bytes)
+- Reports/ (34 documents - Complete documentation set)
+- Logs/ (13 log files - Execution history)
+
+## Archive Purpose
+These intermediate files were moved to archive to maintain a clean production environment while preserving development history for audit and reference purposes.
+
+## Restoration
+If any archived file is needed:
+1. Copy from appropriate archive subfolder
+2. Restore to Results/Sept_2025/ as needed
+3. Update this manifest if permanent restoration occurs
+
+---
+Archive completed: 2025-10-13 23:11:00
+Total archived: 51 files (36 Excel + 15 data files)
+Production retained: 48 files (1 FINAL Excel + 47 Reports/Logs)

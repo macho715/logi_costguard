@@ -1,0 +1,255 @@
+version: "3.9"
+
+services:
+  # FastAPI Service - API Gateway
+  api:
+    build:
+      context: ./hybrid_doc_system_artifacts_v1/services/api
+      dockerfile: Dockerfile
+    image: hvdc-hybrid-api:1.0
+    container_name: hvdc-api
+    environment:
+      # ADE Configuration
+      - ADE_API_KEY=${ADE_API_KEY}
+      - ADE_ENDPOINT=${ADE_ENDPOINT:-https://api.landing.ai}
+
+      # Routing Configuration
+      - ROUTING_RULES_PATH=/app/config/routing_rules_hvdc.json
+      - IR_SCHEMA_PATH=/app/config/unified_ir_schema_hvdc.yaml
+
+      # HVDC Data Paths
+      - SHPT_DATA_PATH=/app/data/01_DSV_SHPT
+      - DOMESTIC_DATA_PATH=/app/data/02_DSV_DOMESTIC
+
+      # Gate Validation
+      - GATE_VALIDATION_ENABLED=true
+      - WEIGHT_TOLERANCE_PCT=3.0
+
+      # Budget Control
+      - ADE_DAILY_BUDGET_USD=50.0
+
+      # Celery Configuration
+      - CELERY_BROKER_URL=amqp://guest:guest@broker:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - UPLOAD_DIR=/app/data/uploads
+
+    volumes:
+      # Configuration (read-only)
+      - ./00_Shared/hybrid_integration:/app/config:ro
+
+      # Data directories (read-write)
+      - ./01_DSV_SHPT:/app/data/01_DSV_SHPT:rw
+      - ./02_DSV_DOMESTIC:/app/data/02_DSV_DOMESTIC:rw
+
+      # Results output
+      - ./Results:/app/results:rw
+
+      # Uploads
+      - ./data/uploads:/app/data/uploads:rw
+
+      # Logs
+      - ./logs:/app/logs:rw
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - broker
+      - redis
+      - docling
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Celery Worker (x3 for parallel processing)
+  worker:
+    build:
+      context: ./hybrid_doc_system_artifacts_v1/services/worker
+      dockerfile: Dockerfile
+    image: hvdc-hybrid-worker:1.0
+    environment:
+      # Same as API
+      - ADE_API_KEY=${ADE_API_KEY}
+      - ADE_ENDPOINT=${ADE_ENDPOINT:-https://api.landing.ai}
+      - ROUTING_RULES_PATH=/app/config/routing_rules_hvdc.json
+      - IR_SCHEMA_PATH=/app/config/unified_ir_schema_hvdc.yaml
+      - SHPT_DATA_PATH=/app/data/01_DSV_SHPT
+      - DOMESTIC_DATA_PATH=/app/data/02_DSV_DOMESTIC
+      - GATE_VALIDATION_ENABLED=true
+      - WEIGHT_TOLERANCE_PCT=3.0
+      - ADE_DAILY_BUDGET_USD=50.0
+      - CELERY_BROKER_URL=amqp://guest:guest@broker:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - LOG_LEVEL=INFO
+
+      # Worker-specific
+      - CELERY_WORKER_CONCURRENCY=4
+      - CELERY_WORKER_MAX_TASKS_PER_CHILD=100
+
+    volumes:
+      # Same mounts as API
+      - ./00_Shared/hybrid_integration:/app/config:ro
+      - ./01_DSV_SHPT:/app/data/01_DSV_SHPT:rw
+      - ./02_DSV_DOMESTIC:/app/data/02_DSV_DOMESTIC:rw
+      - ./Results:/app/results:rw
+      - ./data/uploads:/app/data/uploads:rw
+      - ./logs:/app/logs:rw
+
+    depends_on:
+      - broker
+      - redis
+      - docling
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A worker inspect ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Broker
+  broker:
+    image: rabbitmq:3.13-management
+    container_name: hvdc-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_VHOST=/
+
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Backend
+  redis:
+    image: redis:7-alpine
+    container_name: hvdc-redis
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Docling Service (Local PDF Parser)
+  docling:
+    image: docling/docling:latest
+    container_name: hvdc-docling
+    environment:
+      - DOCLING_LOG_LEVEL=INFO
+      - DOCLING_MAX_WORKERS=4
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./data/docling_cache:/app/cache:rw
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring (Optional - Flower for Celery)
+  flower:
+    image: mher/flower:latest
+    container_name: hvdc-flower
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@broker:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_PORT=5555
+
+    ports:
+      - "5555:5555"
+
+    depends_on:
+      - broker
+      - redis
+
+    networks:
+      - hvdc-network
+
+    restart: unless-stopped
+
+    command: celery --broker=amqp://guest:guest@broker:5672// flower --port=5555
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  hvdc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+

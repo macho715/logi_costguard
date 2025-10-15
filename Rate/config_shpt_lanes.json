@@ -1,0 +1,198 @@
+{
+    "metadata": {
+        "version": "1.0.0",
+        "created": "2025-10-14",
+        "description": "SHPT Lane Map Configuration - 해상 및 항공 운송 경로 요율",
+        "source": "shpt_audit_system.py lanes + contract_inland_trucking_charge_rates_v1.3.md",
+        "currency": "USD",
+        "effective_date": "2025-09-01"
+    },
+    "sea_transport": {
+        "KP_DSV_YD": {
+            "lane_id": "L01",
+            "rate": 252.00,
+            "route": "Khalifa Port → Storage Yard",
+            "category": "Container",
+            "port": "Khalifa Port",
+            "destination": "Storage Yard",
+            "unit": "per truck",
+            "description": "20FT Container inland trucking"
+        },
+        "KP_DSV_MUSSAFAH": {
+            "lane_id": "L01A",
+            "rate": 252.00,
+            "route": "Khalifa Port → DSV Mussafah Yard",
+            "category": "Container",
+            "port": "Khalifa Port",
+            "destination": "DSV Mussafah Yard",
+            "unit": "per truck",
+            "description": "Container transport to DSV Mussafah Yard"
+        },
+        "DSV_MUSSAFAH_KP": {
+            "lane_id": "L01B",
+            "rate": 252.00,
+            "route": "DSV Mussafah Yard → Khalifa Port",
+            "category": "Container",
+            "port": "DSV Mussafah Yard",
+            "destination": "Khalifa Port",
+            "unit": "per truck",
+            "description": "Empty container return to Khalifa Port"
+        },
+        "DSV_YD_MIRFA": {
+            "lane_id": "L38",
+            "rate": 420.00,
+            "route": "DSV Yard → MIRFA",
+            "category": "Container",
+            "port": "Storage Yard",
+            "destination": "MIRFA SITE",
+            "unit": "per truck",
+            "description": "Container transport to MIRFA site"
+        },
+        "DSV_YD_SHUWEIHAT": {
+            "lane_id": "L44",
+            "rate": 600.00,
+            "route": "DSV Yard → SHUWEIHAT",
+            "category": "Container",
+            "port": "Storage Yard",
+            "destination": "SHUWEIHAT Site",
+            "unit": "per truck",
+            "description": "Container transport to SHUWEIHAT site"
+        },
+        "MOSB_DSV_YD": {
+            "lane_id": "L33",
+            "rate": 200.00,
+            "route": "MOSB → DSV Yard",
+            "category": "Container",
+            "port": "Musaffah Port",
+            "destination": "Storage Yard",
+            "unit": "per truck",
+            "description": "Container from MOSB to storage yard"
+        }
+    },
+    "air_transport": {
+        "AUH_DSV_MUSSAFAH": {
+            "lane_id": "A01",
+            "rate": 100.00,
+            "route": "AUH Airport → DSV Mussafah (3T PU)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "Storage Yard",
+            "unit": "per truck",
+            "weight_category": "3T PU",
+            "description": "3-ton pickup truck from airport to warehouse"
+        },
+        "AUH_MOSB_3T": {
+            "lane_id": "A01B",
+            "rate": 100.00,
+            "route": "AUH Airport → MOSB (3T PU)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "MOSB",
+            "unit": "per truck",
+            "weight_category": "3T PU",
+            "description": "3-ton pickup truck from airport to MOSB"
+        },
+        "AUH_MOSB_1T": {
+            "lane_id": "A01C",
+            "rate": 200.00,
+            "route": "AUH Airport → MOSB (FB)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "MOSB",
+            "unit": "per truck",
+            "weight_category": "FB",
+            "description": "Flatbed truck from airport to MOSB"
+        },
+        "AUH_MIRFA_1T": {
+            "lane_id": "AAM1T",
+            "rate": 150.00,
+            "route": "Abu Dhabi Airport → MIRFA (≤1t)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "MIRFA SITE",
+            "unit": "per truck",
+            "weight_category": "≤1t"
+        },
+        "AUH_MIRFA_3T": {
+            "lane_id": "AAM3T",
+            "rate": 150.00,
+            "route": "Abu Dhabi Airport → MIRFA (1-3t)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "MIRFA SITE",
+            "unit": "per truck",
+            "weight_category": "1-3t"
+        },
+        "AUH_MIRFA_FB": {
+            "lane_id": "AAM_FB",
+            "rate": 405.00,
+            "route": "Abu Dhabi Airport → MIRFA (FB)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "MIRFA",
+            "unit": "per truck",
+            "weight_category": "FB",
+            "description": "Flatbed truck transport to MIRFA (half of combined route)"
+        },
+        "AUH_SHUWEIHAT_1T": {
+            "lane_id": "AAS1T",
+            "rate": 210.00,
+            "route": "Abu Dhabi Airport → SHUWEIHAT (≤1t)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "SHUWEIHAT Site",
+            "unit": "per truck",
+            "weight_category": "≤1t"
+        },
+        "AUH_SHUWEIHAT_FB": {
+            "lane_id": "AAS_FB",
+            "rate": 405.00,
+            "route": "Abu Dhabi Airport → SHUWEIHAT (FB)",
+            "category": "Air",
+            "port": "Abu Dhabi Airport",
+            "destination": "SHUWEIHAT",
+            "unit": "per truck",
+            "weight_category": "FB",
+            "description": "Flatbed truck transport to SHUWEIHAT (half of combined route)"
+        }
+    },
+    "normalization_aliases": {
+        "ports": {
+            "KHALIFA": "Khalifa Port",
+            "KP": "Khalifa Port",
+            "KHP": "Khalifa Port",
+            "KHALIFA PORT": "Khalifa Port",
+            "JEBEL ALI": "Jebel Ali Port",
+            "JAP": "Jebel Ali Port",
+            "ABU DHABI AIRPORT": "Abu Dhabi Airport",
+            "AUH AIRPORT": "Abu Dhabi Airport",
+            "AUH": "Abu Dhabi Airport",
+            "DUBAI AIRPORT": "Dubai Airport",
+            "DXB": "Dubai Airport",
+            "MUSSAFAH": "Musaffah Port",
+            "MUSAFFAH": "Musaffah Port",
+            "MOSB": "MOSB",
+            "MINA ZAYED": "Mina Zayed Port",
+            "DSV MUSSAFAH YARD": "DSV Mussafah Yard",
+            "DSV MUSAFFAH YARD": "DSV Mussafah Yard",
+            "DSV MUSSAFAH": "DSV Mussafah Yard"
+        },
+        "destinations": {
+            "MIRFA": "MIRFA",
+            "MIRFA SITE": "MIRFA SITE",
+            "SHUWEIHAT": "SHUWEIHAT",
+            "SHUWEIHAT SITE": "SHUWEIHAT Site",
+            "SHU": "SHUWEIHAT Site",
+            "STORAGE YARD": "Storage Yard",
+            "DSV YARD": "Storage Yard",
+            "DSV MUSSAFAH YARD": "DSV Mussafah Yard",
+            "DSV MUSAFFAH YARD": "DSV Mussafah Yard",
+            "DSV MUSSAFAH": "DSV Mussafah Yard",
+            "HAMARIYA": "Hamariya Free Zone",
+            "HAMARIYA FREE ZONE": "Hamariya Free Zone",
+            "HFZ": "Hamariya Free Zone",
+            "MOSB": "MOSB",
+            "KHALIFA PORT": "Khalifa Port"
+        }
+    }
+}

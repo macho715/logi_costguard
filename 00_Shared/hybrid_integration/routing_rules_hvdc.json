@@ -1,0 +1,386 @@
+{
+    "version": "1.0-hvdc",
+    "project": "HVDC Invoice Audit System",
+    "default_engine": "docling",
+    "daily_ade_budget_usd": 50.0,
+    "sensitivity_force_local": [
+        "contract",
+        "passport",
+        "price-sensitive",
+        "portal-fee",
+        "demurrage-calculation"
+    ],
+    "rules": [
+        {
+            "name": "boe_table_dense",
+            "description": "BOE documents with high table density route to ADE for superior table extraction",
+            "priority": 5,
+            "doc_types": [
+                "BOE"
+            ],
+            "when": {
+                "table_density_gte": 0.30
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "BOE with dense tables - ADE excels at table extraction"
+            }
+        },
+        {
+            "name": "boe_long_document",
+            "description": "Long BOE documents (>12 pages) handled better by ADE",
+            "priority": 4,
+            "doc_types": [
+                "BOE"
+            ],
+            "when": {
+                "pages_gt": 12
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Long BOE document - ADE handles multi-page documents better"
+            }
+        },
+        {
+            "name": "boe_hs_code_complex",
+            "description": "BOE with multiple HS code classifications benefits from ADE precision",
+            "priority": 6,
+            "doc_types": [
+                "BOE"
+            ],
+            "when": {
+                "hs_code_count_gte": 5
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Multiple HS codes require precise extraction"
+            }
+        },
+        {
+            "name": "do_skewed_scan",
+            "description": "Delivery Orders with skewed scans corrected better by ADE",
+            "priority": 7,
+            "doc_types": [
+                "DO"
+            ],
+            "when": {
+                "skew_deg_gte": 4.0
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Skewed DO scan - ADE has better deskewing capabilities"
+            }
+        },
+        {
+            "name": "do_multi_container",
+            "description": "DO with multiple containers benefits from ADE's layout understanding",
+            "priority": 5,
+            "doc_types": [
+                "DO"
+            ],
+            "when": {
+                "container_count_gte": 3
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Multiple containers require precise extraction"
+            }
+        },
+        {
+            "name": "dn_multi_page",
+            "description": "Delivery Notes with 4+ pages better handled by ADE",
+            "priority": 5,
+            "doc_types": [
+                "DN"
+            ],
+            "when": {
+                "pages_gte": 4
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Multi-page DN - better handling with ADE"
+            }
+        },
+        {
+            "name": "dn_domestic_complex_route",
+            "description": "DN with complex routing info (multiple stops) use ADE",
+            "priority": 6,
+            "doc_types": [
+                "DN"
+            ],
+            "when": {
+                "multi_stop_detected": true
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Complex route with multiple stops requires advanced parsing"
+            }
+        },
+        {
+            "name": "visual_relations_detection",
+            "description": "Documents with visual relationships (checkboxes, signatures, charts) use ADE",
+            "priority": 8,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "visual_relations": [
+                    "checkbox",
+                    "caption",
+                    "chart",
+                    "signature",
+                    "stamp"
+                ]
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Document contains visual relationships - ADE specializes in this"
+            }
+        },
+        {
+            "name": "carrier_invoice_complex",
+            "description": "Carrier invoices with complex line items use ADE",
+            "priority": 5,
+            "doc_types": [
+                "CarrierInvoice"
+            ],
+            "when": {
+                "line_item_count_gte": 10
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Complex invoice with many line items"
+            }
+        },
+        {
+            "name": "poor_scan_quality",
+            "description": "Low quality scans (<200 DPI) benefit from ADE's enhancement",
+            "priority": 7,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "dpi_lt": 200
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Poor scan quality - ADE has better image enhancement"
+            }
+        },
+        {
+            "name": "ade_budget_guard",
+            "description": "When ADE daily budget is exceeded, force fallback to Docling",
+            "priority": 100,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "ade_budget_exceeded": true
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "ADE daily budget ($50 USD) exceeded - fallback to Docling for cost control"
+            }
+        },
+        {
+            "name": "sensitive_force_local",
+            "description": "Sensitive documents must be processed locally for security/compliance",
+            "priority": 1000,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "sensitivity_in": [
+                    "contract",
+                    "passport",
+                    "price-sensitive",
+                    "portal-fee",
+                    "demurrage-calculation"
+                ]
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "Sensitive document - local processing only for security compliance"
+            }
+        },
+        {
+            "name": "engine_fallback_ade_to_docling",
+            "description": "When ADE fails, automatically fallback to Docling",
+            "priority": 200,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "engine_failed": true,
+                "failed_engine": "ade"
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "ADE engine failed - fallback to Docling"
+            }
+        },
+        {
+            "name": "engine_fallback_docling_to_ade",
+            "description": "When Docling fails AND budget allows, try ADE",
+            "priority": 150,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "engine_failed": true,
+                "failed_engine": "docling",
+                "ade_budget_exceeded": false
+            },
+            "action": {
+                "engine": "ade",
+                "reason": "Docling engine failed - attempting ADE as fallback"
+            }
+        },
+        {
+            "name": "standard_documents_docling",
+            "description": "Standard documents without special characteristics use Docling (default, cost-effective)",
+            "priority": 1,
+            "doc_types": [
+                "BOE",
+                "DO",
+                "DN",
+                "CarrierInvoice"
+            ],
+            "when": {
+                "default": true
+            },
+            "action": {
+                "engine": "docling",
+                "reason": "Standard document - Docling is fast, local, and cost-effective"
+            }
+        }
+    ],
+    "metrics_emit": [
+        "latency_ms",
+        "engine",
+        "doc_type",
+        "pages",
+        "table_density",
+        "ade_cost_usd",
+        "cache_hit",
+        "retries",
+        "rule_matched",
+        "confidence",
+        "gate_validation_results"
+    ],
+    "performance_targets": {
+        "max_latency_ms": 10000,
+        "min_success_rate": 0.95,
+        "min_confidence": 0.90,
+        "cache_hit_rate_target": 0.40
+    },
+    "cost_management": {
+        "ade_cost_per_page_usd": 0.01,
+        "daily_budget_usd": 50.0,
+        "budget_alert_threshold_pct": 0.80,
+        "budget_exceeded_action": "force_docling"
+    },
+    "fallback_strategy": {
+        "max_retries": 2,
+        "retry_delay_ms": 1000,
+        "fallback_order": [
+            "ade",
+            "docling"
+        ],
+        "fallback_on_low_confidence": true,
+        "low_confidence_threshold": 0.85
+    },
+    "document_type_detection": {
+        "boe_indicators": [
+            "Bill of Entry",
+            "Entry No",
+            "Customs Office",
+            "HS Code",
+            "Tariff"
+        ],
+        "do_indicators": [
+            "Delivery Order",
+            "DO No",
+            "Container Release",
+            "Free Days",
+            "Demurrage"
+        ],
+        "dn_indicators": [
+            "Delivery Note",
+            "Loading Point",
+            "Destination",
+            "Vehicle Type",
+            "Driver"
+        ],
+        "carrier_invoice_indicators": [
+            "Carrier Invoice",
+            "Freight Charges",
+            "Shipping Line",
+            "Vessel Name"
+        ]
+    },
+    "confidence_thresholds": {
+        "boe": {
+            "mbl_no": 0.95,
+            "entry_no": 0.95,
+            "containers": 0.90,
+            "gross_weight": 0.85,
+            "hs_code": 0.95
+        },
+        "do": {
+            "do_number": 0.95,
+            "validity_date": 0.90,
+            "container_no": 0.95
+        },
+        "dn": {
+            "origin": 0.85,
+            "destination": 0.85,
+            "vehicle_type": 0.80,
+            "do_reference": 0.85
+        },
+        "carrier_invoice": {
+            "invoice_number": 0.95,
+            "total_amount": 0.95,
+            "line_items": 0.85
+        }
+    },
+    "hvdc_specific_config": {
+        "shipment_id_pattern": "^HVDC-[A-Z]+-[A-Z]+-\\d+$",
+        "supported_ports": [
+            "Khalifa Port",
+            "Jebel Ali Port",
+            "Abu Dhabi Port",
+            "Dubai Port"
+        ],
+        "supported_destinations": [
+            "MIRFA",
+            "SHUWEIHAT",
+            "DSV Yard"
+        ],
+        "weight_tolerance_pct": 3.0,
+        "demurrage_risk_thresholds": {
+            "low": 7,
+            "medium": 3,
+            "high": 1,
+            "critical": 0
+        }
+    }
+}

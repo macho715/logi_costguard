@@ -1,0 +1,142 @@
+{
+    "description": "Template for configuration variables - Identifies which config items need to be updated for different scenarios",
+    "version": "1.0.0",
+    "last_updated": "2025-10-14",
+    "monthly_variables": {
+        "description": "Items that change every month",
+        "variables": [
+            {
+                "name": "fx_rate",
+                "location": "config_metadata.json -> fx_rates.USD_AED",
+                "update_frequency": "monthly",
+                "source": "Central Bank rates or agreed contract rate",
+                "example": 3.6725
+            },
+            {
+                "name": "applicable_period",
+                "location": "config_metadata.json -> applicable_period",
+                "update_frequency": "monthly",
+                "format": "YYYY-MM",
+                "example": "2025-09"
+            },
+            {
+                "name": "fuel_surcharge",
+                "location": "config_contract_rates.json -> variable_rates.fuel_surcharge",
+                "update_frequency": "monthly",
+                "source": "Forwarder monthly bulletin",
+                "example": null
+            }
+        ]
+    },
+    "project_variables": {
+        "description": "Items that change per project",
+        "variables": [
+            {
+                "name": "project_name",
+                "location": "config_metadata.json -> project",
+                "update_frequency": "per_project",
+                "example": "HVDC_ADOPT"
+            },
+            {
+                "name": "destinations",
+                "location": "config_shpt_lanes.json -> normalization_aliases.destinations",
+                "update_frequency": "per_project",
+                "note": "Add project-specific destinations",
+                "example": [
+                    "MIRFA SITE",
+                    "SHUWEIHAT Site"
+                ]
+            },
+            {
+                "name": "special_rates",
+                "location": "config_contract_rates.json -> fixed_fees",
+                "update_frequency": "per_project",
+                "note": "Project-specific contracted rates",
+                "example": {
+                    "DO_FEE_AIR": 80.00
+                }
+            },
+            {
+                "name": "lane_routes",
+                "location": "config_shpt_lanes.json -> sea_transport, air_transport",
+                "update_frequency": "per_project",
+                "note": "Project-specific transportation routes",
+                "example": "Khalifa Port → DSV Mussafah Yard"
+            }
+        ]
+    },
+    "forwarder_variables": {
+        "description": "Items that change per forwarder",
+        "variables": [
+            {
+                "name": "forwarder_name",
+                "location": "config_metadata.json -> forwarder",
+                "update_frequency": "per_forwarder",
+                "example": "DSV"
+            },
+            {
+                "name": "field_mappings",
+                "location": "excel_schema.json -> column_mappings",
+                "update_frequency": "per_forwarder",
+                "note": "Forwarder-specific Excel column names",
+                "example": {
+                    "order_ref": "Order Ref. Number"
+                }
+            },
+            {
+                "name": "pdf_templates",
+                "location": "pdf_templates/{FORWARDER}.json",
+                "update_frequency": "per_forwarder",
+                "note": "PDF parsing patterns for each forwarder",
+                "example": "DSV BOE/DO/DN templates"
+            },
+            {
+                "name": "order_ref_pattern",
+                "location": "forwarder_adapters/{FORWARDER}_adapter.py",
+                "update_frequency": "per_forwarder",
+                "note": "Order reference number format",
+                "example": "HVDC-ADOPT-SCT-0123"
+            }
+        ]
+    },
+    "static_variables": {
+        "description": "Items that rarely change",
+        "variables": [
+            {
+                "name": "cost_guard_bands",
+                "location": "config_cost_guard_bands.json",
+                "update_frequency": "annual",
+                "note": "Business policy for delta tolerance"
+            },
+            {
+                "name": "validation_rules",
+                "location": "config_validation_rules.json",
+                "update_frequency": "annual",
+                "note": "Validation business rules"
+            }
+        ]
+    },
+    "migration_checklist": {
+        "new_month": [
+            "1. Update config_metadata.json -> applicable_period",
+            "2. Update config_metadata.json -> fx_rates.USD_AED",
+            "3. Check for fuel surcharge updates",
+            "4. Update config_metadata.json -> fx_rates.last_updated",
+            "5. Archive previous month's config to Rate/archives/{YYYY-MM}/"
+        ],
+        "new_project": [
+            "1. Update config_metadata.json -> project",
+            "2. Add project-specific destinations to config_shpt_lanes.json",
+            "3. Add project-specific lanes to config_shpt_lanes.json",
+            "4. Add project-specific rates to config_contract_rates.json",
+            "5. Test with sample invoice"
+        ],
+        "new_forwarder": [
+            "1. Create forwarder_adapters/{FORWARDER}_adapter.py",
+            "2. Create pdf_templates/{FORWARDER}.json",
+            "3. Update excel_schema.json with forwarder-specific columns",
+            "4. Update config_metadata.json -> forwarder",
+            "5. Run full validation test"
+        ]
+    }
+}

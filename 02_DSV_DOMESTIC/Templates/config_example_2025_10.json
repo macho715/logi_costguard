@@ -1,0 +1,57 @@
+{
+    "_comment": "DOMESTIC Invoice Validation - October 2025 Example Configuration",
+    
+    "metadata": {
+        "month": "202510",
+        "month_name": "Oct",
+        "year": "2025",
+        "created_date": "2025-10-14",
+        "created_by": "MACHO-GPT Migration Tool"
+    },
+    
+    "paths": {
+        "invoice_excel": "Data/DSV 202510/SCNT HVDC DRAFT INVOICE FOR DOMESTIC DELIVERY OCTOBER 2025.xlsx",
+        "dn_pdf_folder": "Data/DSV 202510/SCNT Domestic (Oct 2025) - Supporting Documents/",
+        "lanemap_json": "ApprovedLaneMap_ENHANCED.json",
+        "output_folder": "Results/Oct_2025/",
+        "reports_folder": "Results/Oct_2025/Reports/",
+        "logs_folder": "Results/Oct_2025/Logs/"
+    },
+    
+    "output_patterns": {
+        "final_excel": "domestic_oct_2025_FINAL_WITH_PDF_VALIDATION_{timestamp}.xlsx",
+        "validation_report": "OCT_2025_COMPLETE_VALIDATION_REPORT.md",
+        "dn_supply_demand": "dn_supply_demand_oct.csv",
+        "dn_candidate_dump": "dn_candidate_dump_oct.csv"
+    },
+    
+    "parameters": {
+        "dn_auto_capacity_bump": true,
+        "dn_max_capacity": 16,
+        "dn_capacity_default": 1,
+        "dn_use_pdf_fields_first": true,
+        "dn_origin_threshold": 0.27,
+        "dn_dest_threshold": 0.50,
+        "dn_vehicle_threshold": 0.30,
+        "dn_min_score": 0.40,
+        "dn_dump_topn": 3,
+        "dn_dump_supply": true
+    },
+    
+    "hybrid_integration": {
+        "enabled": true,
+        "log_level": "INFO",
+        "ade_daily_budget": 50.0,
+        "fallback_to_legacy": true
+    },
+    
+    "validation": {
+        "expected_dn_count_min": 30,
+        "expected_dn_count_max": 50,
+        "expected_invoice_items_min": 35,
+        "expected_invoice_items_max": 55,
+        "target_match_rate": 0.90,
+        "target_fail_rate_max": 0.05
+    }
+}
+

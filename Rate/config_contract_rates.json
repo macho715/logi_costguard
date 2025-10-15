@@ -1,0 +1,149 @@
+{
+    "metadata": {
+        "version": "1.0.0",
+        "created": "2025-10-14",
+        "description": "Contract 기본 요율 설정 - 고정 계약 요율 및 수수료",
+        "source": "SHPT system contract_info + Portal Fee definitions",
+        "contract_number": "HVDC-SHPT-2025-001"
+    },
+    "fixed_fees": {
+        "DO_FEE_AIR": {
+            "rate": 80.00,
+            "unit": "per shipment",
+            "description": "Master DO Fee - Air Shipment",
+            "category": "DOC",
+            "transport_mode": "AIR",
+            "keywords": [
+                "MASTER DO FEE",
+                "DO FEE",
+                "DELIVERY ORDER"
+            ]
+        },
+        "DO_FEE_CONTAINER": {
+            "rate": 150.00,
+            "unit": "per shipment",
+            "description": "Master DO Fee - Container Shipment",
+            "category": "DOC",
+            "transport_mode": "CONTAINER",
+            "keywords": [
+                "MASTER DO FEE",
+                "DO FEE",
+                "DELIVERY ORDER"
+            ]
+        },
+        "CUSTOMS_CLEARANCE_FEE": {
+            "rate": 150.00,
+            "unit": "per shipment",
+            "description": "Customs Clearance Processing Fee",
+            "category": "CUS",
+            "keywords": [
+                "CUSTOMS CLEARANCE",
+                "CUSTOM CLEARANCE",
+                "CLEARANCE FEE"
+            ]
+        },
+        "HOUSE_DO_FEE": {
+            "rate": 50.00,
+            "unit": "per DO",
+            "description": "House Delivery Order fee",
+            "category": "DOC"
+        },
+        "BOE_PROCESSING": {
+            "rate": 100.00,
+            "unit": "per BOE",
+            "description": "Bill of Entry processing",
+            "category": "CUS"
+        },
+        "THC_20FT": {
+            "rate": 280.00,
+            "unit": "per container",
+            "description": "Terminal Handling Charge 20FT",
+            "category": "THC",
+            "container_type": "20FT"
+        },
+        "THC_40FT": {
+            "rate": 420.00,
+            "unit": "per container",
+            "description": "Terminal Handling Charge 40FT",
+            "category": "THC",
+            "container_type": "40FT"
+        }
+    },
+    "portal_fees_aed": {
+        "APPOINTMENT_FEE": {
+            "rate_aed": 27.00,
+            "rate_usd": 7.35,
+            "description": "Portal appointment booking fee",
+            "tolerance_percent": 0.5
+        },
+        "DPC_FEE": {
+            "rate_aed": 35.00,
+            "rate_usd": 9.53,
+            "description": "Document Processing Charge",
+            "tolerance_percent": 0.5
+        },
+        "TRUCK_APPOINTMENT_FEE": {
+            "rate_aed": 27.00,
+            "rate_usd": 7.35,
+            "description": "Truck appointment fee",
+            "tolerance_percent": 0.5
+        },
+        "DOCUMENT_PROCESSING_FEE": {
+            "rate_aed": 35.00,
+            "rate_usd": 9.53,
+            "description": "Document processing fee (standard)",
+            "tolerance_percent": 0.5
+        }
+    },
+    "inland_transportation": {
+        "TRANSPORTATION_AIRPORT_MOSB_1FB": {
+            "rate_usd": 200.00,
+            "unit": "per trip",
+            "description": "1 Flatbed from AUH Airport to MOSB",
+            "category": "TRANSPORT",
+            "keywords": [
+                "AIRPORT",
+                "MOSB",
+                "1 FB",
+                "1 FLATBED"
+            ],
+            "origin": "AUH AIRPORT",
+            "destination": "MOSB"
+        },
+        "TRANSPORTATION_AIRPORT_MIRFA_SHUWEIHAT_1FB": {
+            "rate_usd": 810.00,
+            "unit": "per trip",
+            "description": "1 Flatbed from AUH Airport to MIRFA + SHUWEIHAT",
+            "category": "TRANSPORT",
+            "keywords": [
+                "AIRPORT",
+                "MIRFA",
+                "SHUWEIHAT",
+                "1 FB",
+                "1 FLATBED"
+            ],
+            "origin": "AUH AIRPORT",
+            "destination": "MIRFA+SHUWEIHAT"
+        }
+    },
+    "variable_rates": {
+        "STORAGE_FEE": {
+            "rate_per_day": 5.00,
+            "unit": "per CBM per day",
+            "description": "Warehouse storage charge",
+            "category": "WHF"
+        },
+        "HANDLING_FEE": {
+            "rate_per_unit": 15.00,
+            "unit": "per CBM",
+            "description": "Warehouse handling fee",
+            "category": "WHF"
+        }
+    },
+    "validation_rules": {
+        "default_tolerance": 3.0,
+        "portal_fee_tolerance": 0.5,
+        "at_cost_tolerance": 0.0,
+        "contract_tolerance": 2.0
+    }
+}

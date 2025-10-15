@@ -1,0 +1,666 @@
+{
+  "dataset": "inland_trucking_reference_rates_clean",
+  "generated_at": "2025-08-12T19:54:06.203657",
+  "currency_policy": {
+    "base": "USD",
+    "fixed_fx": {
+      "USD_AED": 3.6725
+    }
+  },
+  "validation_rules": {
+    "layer1_contract_tolerance": 0.03,
+    "autofail_threshold": 0.15
+  },
+  "records": [
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 150.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 180.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 150.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 210.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 250.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 210.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 100.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 120.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Abu Dhabi Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 100.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 250.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 300.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 250.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 290.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 370.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 290.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 410.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 460.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 410.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 1ton, Upto 3ton)",
+      "rate": {
+        "amount": 200.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Above 3ton, Upto 5ton)",
+      "rate": {
+        "amount": 250.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Air",
+      "port": "Dubai Airport",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking (Upto 1ton)",
+      "rate": {
+        "amount": 200.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Jebel Ali Port",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 14.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Jebel Ali Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 20.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Jebel Ali Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 25.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Bulk",
+      "port": "Jebel Ali Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 15.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Khalifa Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 13.4,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Khalifa Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 15.2,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Khalifa Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 10.5,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Bulk",
+      "port": "Mina Zayed Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 21.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Mina Zayed Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 13.1,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Mina Zayed Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 23.8,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Musaffah Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 18.4,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Musaffah Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 22.2,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Bulk",
+      "port": "Musaffah Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 5.2,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 55.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "Hamariya free zone, Sharjah",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 400.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 68.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 770.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 85.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 980.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 55.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Jebel Ali Port",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 400.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "MIRFA SITE",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 35.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "MIRFA SITE",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 496.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "Mina Zayed Port",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 35.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "Mina Zayed Port",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 400.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "ok"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 45.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "SHUWEIHAT Site",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 679.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "Storage Yard",
+      "unit": "per RT",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 29.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    },
+    {
+      "category": "Container",
+      "port": "Khalifa Port",
+      "destination": "Storage Yard",
+      "unit": "per truck",
+      "charge_description": "Inland Trucking",
+      "rate": {
+        "amount": 252.0,
+        "currency": "USD",
+        "tolerance": 0.03
+      },
+      "flag": "outlier"
+    }
+  ]
+}

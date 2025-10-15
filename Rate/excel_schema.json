@@ -1,0 +1,240 @@
+{
+    "description": "Excel file schema definition for invoice validation - Supports multiple forwarders and templates",
+    "version": "1.0.0",
+    "last_updated": "2025-10-14",
+    "required_columns": {
+        "No": {
+            "type": "int",
+            "nullable": false,
+            "description": "Sequential item number",
+            "aliases": [
+                "No",
+                "No.",
+                "Item No",
+                "Line No"
+            ]
+        },
+        "Order Ref. Number": {
+            "type": "str",
+            "nullable": false,
+            "description": "Shipment reference number",
+            "aliases": [
+                "Order Ref. Number",
+                "Order Ref",
+                "Shipment Ref",
+                "Ref Number"
+            ]
+        },
+        "DESCRIPTION": {
+            "type": "str",
+            "nullable": false,
+            "description": "Charge description",
+            "aliases": [
+                "DESCRIPTION",
+                "Description",
+                "Charge Description",
+                "Details"
+            ]
+        },
+        "RATE": {
+            "type": "float",
+            "nullable": false,
+            "description": "Draft invoice rate",
+            "aliases": [
+                "RATE",
+                "Rate",
+                "Unit Rate",
+                "Price"
+            ]
+        },
+        "RATE SOURCE": {
+            "type": "str",
+            "nullable": true,
+            "description": "Rate source classification",
+            "aliases": [
+                "RATE SOURCE",
+                "Rate Source",
+                "Source",
+                "Type"
+            ]
+        },
+        "Q'TY": {
+            "type": "float",
+            "nullable": true,
+            "description": "Quantity",
+            "aliases": [
+                "Q'TY",
+                "QTY",
+                "Quantity",
+                "Qty"
+            ]
+        },
+        "TOTAL (USD)": {
+            "type": "float",
+            "nullable": true,
+            "description": "Total amount",
+            "aliases": [
+                "TOTAL (USD)",
+                "Total",
+                "Amount",
+                "Total Amount"
+            ]
+        }
+    },
+    "optional_columns": {
+        "CWI Job Number": {
+            "type": "str",
+            "description": "Job tracking number"
+        },
+        "S/No": {
+            "type": "str",
+            "description": "Sub-item number"
+        },
+        "Formula": {
+            "type": "str",
+            "description": "VBA formula"
+        },
+        "REV RATE": {
+            "type": "float",
+            "description": "VBA revised rate"
+        },
+        "REV TOTAL": {
+            "type": "float",
+            "description": "VBA revised total"
+        },
+        "DIFFERENCE": {
+            "type": "float",
+            "description": "VBA difference"
+        }
+    },
+    "sheet_names": {
+        "masterdata": {
+            "priority": [
+                "MasterData",
+                "MASTER",
+                "Master",
+                "Main",
+                "Invoice"
+            ],
+            "description": "Main invoice data sheet",
+            "required": true
+        },
+        "summary": {
+            "priority": [
+                "SEPT",
+                "Summary",
+                "Monthly",
+                "Overview"
+            ],
+            "description": "Shipment summary sheet",
+            "required": false
+        },
+        "template": {
+            "priority": [
+                "Template",
+                "TEMPLATE",
+                "_Template"
+            ],
+            "description": "Template sheet (skip)",
+            "required": false
+        }
+    },
+    "skip_sheets": {
+        "patterns": [
+            "^_",
+            "^Template",
+            "^TEMPLATE"
+        ],
+        "exact_names": [
+            "Summary",
+            "Template"
+        ]
+    },
+    "forwarder_specific_mappings": {
+        "DSV": {
+            "order_ref_column": "Order Ref. Number",
+            "order_ref_pattern": "HVDC-ADOPT-(?P<mode>SCT|HE)-(?P<number>\\d+)",
+            "mode_indicators": {
+                "AIR": [
+                    "HE",
+                    "-HE-"
+                ],
+                "CONTAINER": [
+                    "SCT",
+                    "-SCT-"
+                ]
+            },
+            "pdf_subdirectory_format": "{order_ref_normalized}",
+            "masterdata_sheet": "MasterData",
+            "summary_sheet": "SEPT"
+        },
+        "MAERSK": {
+            "order_ref_column": "Booking Number",
+            "order_ref_pattern": "(?P<prefix>[A-Z]+)-(?P<number>\\d+)",
+            "mode_indicators": {
+                "AIR": [
+                    "AIR"
+                ],
+                "CONTAINER": [
+                    "FCL",
+                    "LCL"
+                ]
+            },
+            "pdf_subdirectory_format": "{booking_number}",
+            "masterdata_sheet": "Invoice",
+            "summary_sheet": "Summary"
+        }
+    },
+    "validation_output_columns": {
+        "Ref_Rate_USD": {
+            "type": "float",
+            "description": "Reference rate from config or PDF",
+            "position": 14
+        },
+        "Delta_Percent": {
+            "type": "float",
+            "description": "Percentage difference between draft and reference",
+            "position": 15
+        },
+        "CG_Band": {
+            "type": "str",
+            "description": "COST-GUARD band (PASS/REVIEW/CRITICAL)",
+            "position": 16
+        },
+        "Validation_Status": {
+            "type": "str",
+            "description": "Overall validation status (PASS/REVIEW_NEEDED/FAIL)",
+            "position": 17
+        },
+        "Charge_Group": {
+            "type": "str",
+            "description": "Charge classification (Contract/Other/AtCost/PortalFee)",
+            "position": 18
+        },
+        "PDF_Count": {
+            "type": "int",
+            "description": "Number of PDF files found for this shipment",
+            "position": 19
+        },
+        "Gate_Score": {
+            "type": "float",
+            "description": "Overall gate score (0-100)",
+            "position": 20
+        },
+        "Gate_Status": {
+            "type": "str",
+            "description": "Gate status (PASS/FAIL)",
+            "position": 21
+        },
+        "Validation_Notes": {
+            "type": "str",
+            "description": "Detailed validation notes",
+            "position": 22
+        }
+    },
+    "column_finder": {
+        "description": "How to find columns when exact names don't match",
+        "strategy": "case_insensitive_partial_match",
+        "fallback": "user_manual_mapping"
+    }
+}

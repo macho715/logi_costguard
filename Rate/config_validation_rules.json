@@ -1,0 +1,89 @@
+{
+    "metadata": {
+        "version": "1.0.0",
+        "created": "2025-10-14",
+        "description": "인보이스 검증 규칙 설정",
+        "applicable_system": "SHPT Enhanced Audit System"
+    },
+    "tolerance_rules": {
+        "default": {
+            "percent": 3.0,
+            "description": "일반 항목 기본 허용 오차"
+        },
+        "portal_fee": {
+            "percent": 0.5,
+            "description": "Portal Fee 엄격한 허용 오차"
+        },
+        "contract": {
+            "percent": 2.0,
+            "description": "Contract 항목 허용 오차"
+        },
+        "at_cost": {
+            "percent": 0.0,
+            "description": "At-Cost 항목 (실비 정산, 영수증 기반)"
+        }
+    },
+    "gate_validation_rules": {
+        "gate_01_document_set": {
+            "description": "증빙문서 세트 검증",
+            "required_documents": [
+                "BOE",
+                "DO",
+                "DN"
+            ],
+            "weight": 30,
+            "pass_criteria": "All required documents present"
+        },
+        "gate_07_amount_consistency": {
+            "description": "금액 일치 검증",
+            "formula": "unit_rate × quantity = total_amount",
+            "weight": 20,
+            "tolerance": 0.01,
+            "pass_criteria": "Calculated amount matches declared total"
+        },
+        "gate_scoring": {
+            "max_score": 100,
+            "pass_threshold": 70,
+            "description": "Gate별 점수 합산"
+        }
+    },
+    "charge_group_rules": {
+        "contract": {
+            "validation_required": true,
+            "ref_rate_lookup": "mandatory",
+            "delta_calculation": true,
+            "cost_guard_application": true
+        },
+        "portal_fee": {
+            "validation_required": true,
+            "formula_parsing": "AED_value/3.6725",
+            "tolerance": 0.5,
+            "cost_guard_application": true
+        },
+        "at_cost": {
+            "validation_required": true,
+            "receipt_verification": "mandatory",
+            "delta_calculation": false
+        },
+        "other": {
+            "validation_required": false,
+            "manual_review": true
+        }
+    },
+    "processing_rules": {
+        "max_items_per_batch": 100,
+        "timeout_seconds": 300,
+        "retry_attempts": 3,
+        "parallel_processing": false
+    },
+    "output_rules": {
+        "export_formats": [
+            "JSON",
+            "CSV",
+            "XLSX"
+        ],
+        "include_supporting_docs": true,
+        "generate_summary_report": true,
+        "timestamp_format": "%Y%m%d_%H%M%S"
+    }
+}

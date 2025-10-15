@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""
+Summary Extraction 단위 테스트
+PDF Total Amount 위치 인식 개선 - 테스트
+
+Created: 2025-10-14
+Author: MACHO-GPT v3.4-mini Enhanced PDF Parsing
+"""
+
+import sys
+from pathlib import Path
+
+# Add parent directories to sys.path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "00_Shared"))
+sys.path.insert(0, str(Path(__file__).parent))
+
+from unified_ir_adapter import UnifiedIRAdapter
+
+
+def test_summary_extraction():
+    """
+    Summary 추출 로직 테스트
+
+    테스트 케이스:
+    1. "TOTAL" 라벨 우측 (같은 줄)
+    2. "TOTAL" 아래 줄 (별도 행)
+    3. "Total Net Amount Inclusive of Tax:" 패턴
+    4. 테이블 마지막 행에서 Summary 추출
+    """
+
+    adapter = UnifiedIRAdapter()
+
+    print("\n" + "=" * 80)
+    print("Summary Extraction Unit Tests")
+    print("=" * 80)
+
+    # Test Case 1: TOTAL 우측 (같은 줄)
+    print("\n[Test 1] TOTAL 우측 (같은 줄)")
+    unified_ir_1 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "text",
+                "text": "Description Line 1\nSUB TOTAL    530.00\nVAT (5%)    26.50\nTOTAL    556.50",
+            }
+        ],
+    }
+
+    summary_1 = adapter._extract_summary_section(unified_ir_1["blocks"])
+    print(f"  Result: {summary_1}")
+    assert (
+        summary_1.get("subtotal") == 530.00
+    ), f"Subtotal mismatch: {summary_1.get('subtotal')}"
+    assert summary_1.get("vat") == 26.50, f"VAT mismatch: {summary_1.get('vat')}"
+    assert summary_1.get("total") == 556.50, f"Total mismatch: {summary_1.get('total')}"
+    print("  PASS")
+
+    # Test Case 2: TOTAL 아래 줄 (별도 행)
+    print("\n[Test 2] TOTAL 아래 줄 (별도 행)")
+    unified_ir_2 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "text",
+                "text": "Description Line 1\nSUB TOTAL\n530.00\nVAT\n26.50\nTOTAL\n556.50",
+            }
+        ],
+    }
+
+    summary_2 = adapter._extract_summary_section(unified_ir_2["blocks"])
+    print(f"  Result: {summary_2}")
+    assert (
+        summary_2.get("subtotal") == 530.00
+    ), f"Subtotal mismatch: {summary_2.get('subtotal')}"
+    assert summary_2.get("vat") == 26.50, f"VAT mismatch: {summary_2.get('vat')}"
+    assert summary_2.get("total") == 556.50, f"Total mismatch: {summary_2.get('total')}"
+    print("  PASS")
+
+    # Test Case 3: Total Net Amount Inclusive of Tax
+    print("\n[Test 3] Total Net Amount Inclusive of Tax:")
+    unified_ir_3 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "text",
+                "text": "Description Line 1\nTotal Net Amount Inclusive of Tax:    556.50",
+            }
+        ],
+    }
+
+    summary_3 = adapter._extract_summary_section(unified_ir_3["blocks"])
+    print(f"  Result: {summary_3}")
+    assert summary_3.get("total") == 556.50, f"Total mismatch: {summary_3.get('total')}"
+    print("  PASS")
+
+    # Test Case 4: 테이블 블록에서 Summary 추출
+    print("\n[Test 4] 테이블 마지막 행에서 Summary")
+    unified_ir_4 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "table",
+                "rows": [
+                    ["Description", "Amount"],  # Header
+                    ["Service 1", "100.00"],
+                    ["Service 2", "200.00"],
+                    ["SUB TOTAL", "300.00"],
+                    ["VAT (5%)", "15.00"],
+                    ["TOTAL", "315.00"],
+                ],
+            }
+        ],
+    }
+
+    summary_4 = adapter._extract_summary_section(unified_ir_4["blocks"])
+    print(f"  Result: {summary_4}")
+    assert (
+        summary_4.get("subtotal") == 300.00
+    ), f"Subtotal mismatch: {summary_4.get('subtotal')}"
+    assert summary_4.get("vat") == 15.00, f"VAT mismatch: {summary_4.get('vat')}"
+    assert summary_4.get("total") == 315.00, f"Total mismatch: {summary_4.get('total')}"
+    print("  PASS")
+
+    # Test Case 5: 환율 추출 (R.O.E.)
+    print("\n[Test 5] 환율 추출 (R.O.E.)")
+    unified_ir_5 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "text",
+                "text": "Description Line 1\nTOTAL    556.50\nR.O.E. 1 USD = 3.6725000 AED",
+            }
+        ],
+    }
+
+    summary_5 = adapter._extract_summary_section(unified_ir_5["blocks"])
+    print(f"  Result: {summary_5}")
+    assert summary_5.get("total") == 556.50, f"Total mismatch: {summary_5.get('total')}"
+    assert (
+        summary_5.get("exchange_rate") == 3.6725
+    ), f"Exchange rate mismatch: {summary_5.get('exchange_rate')}"
+    print("  PASS")
+
+    # Test Case 6: GRAND TOTAL 우선순위
+    print("\n[Test 6] GRAND TOTAL 우선순위")
+    unified_ir_6 = {
+        "engine": "pdfplumber",
+        "pages": 1,
+        "blocks": [
+            {
+                "type": "text",
+                "text": "Description Line 1\nTOTAL    100.00\nGRAND TOTAL    556.50",
+            }
+        ],
+    }
+
+    summary_6 = adapter._extract_summary_section(unified_ir_6["blocks"])
+    print(f"  Result: {summary_6}")
+    assert (
+        summary_6.get("total") == 556.50
+    ), f"Grand Total should override Total: {summary_6.get('total')}"
+    print("  PASS")
+
+    print("\n" + "=" * 80)
+    print("All Summary Extraction Tests PASSED!")
+    print("=" * 80)
+
+
+def test_summary_row_skipping():
+    """
+    Summary 행 필터링 테스트
+
+    검증:
+    - _parse_table_row에서 Summary 키워드 행 제외
+    - _extract_items_from_text에서 Summary 키워드 제외
+    """
+
+    adapter = UnifiedIRAdapter()
+
+    print("\n" + "=" * 80)
+    print("Summary Row Skipping Tests")
+    print("=" * 80)
+
+    # Test Case 1: _parse_table_row에서 Summary 행 제외
+    print("\n[Test 1] _parse_table_row - Summary 행 제외")
+
+    # Normal row (should be parsed)
+    normal_row = ["INLAND TRUCKING", "200.00"]
+    result_normal = adapter._parse_table_row(normal_row, 1)
+    print(f"  Normal row: {result_normal}")
+    assert result_normal is not None, "Normal row should be parsed"
+    assert result_normal["description"] == "INLAND TRUCKING"
+    print("  PASS (normal row parsed)")
+
+    # Summary rows (should be skipped)
+    summary_rows = [
+        ["SUB TOTAL", "530.00"],
+        ["SUBTOTAL", "530.00"],
+        ["VAT (5%)", "26.50"],
+        ["TOTAL", "556.50"],
+        ["GRAND TOTAL", "556.50"],
+        ["TOTAL NET AMOUNT", "556.50"],
+    ]
+
+    for summary_row in summary_rows:
+        result_summary = adapter._parse_table_row(summary_row, 1)
+        print(f"  Summary row '{summary_row[0]}': {result_summary}")
+        assert (
+            result_summary is None
+        ), f"Summary row '{summary_row[0]}' should be skipped"
+
+    print("  PASS (all summary rows skipped)")
+
+    # Test Case 2: _extract_items_from_text에서 Summary 행 제외
+    print("\n[Test 2] _extract_items_from_text - Summary 행 제외")
+
+    text_with_summary = """
+    INLAND TRUCKING USD 200.00
+    DOCUMENTATION FEE USD 50.00
+    SUB TOTAL USD 250.00
+    VAT (5%) USD 12.50
+    TOTAL USD 262.50
+    """
+
+    items = adapter._extract_items_from_text(text_with_summary)
+    print(f"  Extracted items: {len(items)}")
+    for item in items:
+        print(f"    - {item['description']}: ${item['amount']:.2f}")
+
+    # Summary 키워드가 있는 항목이 제외되었는지 확인
+    descriptions = [item["description"].upper() for item in items]
+    assert not any("TOTAL" in desc for desc in descriptions), "TOTAL should be skipped"
+    assert not any("VAT" in desc for desc in descriptions), "VAT should be skipped"
+    assert len(items) == 2, f"Should extract 2 items, got {len(items)}"
+
+    print("  PASS (summary keywords excluded)")
+
+    print("\n" + "=" * 80)
+    print("All Summary Row Skipping Tests PASSED!")
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    try:
+        # Test Summary extraction
+        test_summary_extraction()
+
+        # Test Summary row skipping
+        test_summary_row_skipping()
+
+        print("\n" + "=" * 80)
+        print("ALL TESTS PASSED - Summary extraction working as expected!")
+        print("=" * 80)
+
+    except AssertionError as e:
+        print(f"\n\nTEST FAILED: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n\nUNEXPECTED ERROR: {e}")
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)

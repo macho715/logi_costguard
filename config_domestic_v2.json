@@ -1,0 +1,61 @@
+{
+    "similarity": {
+        "weights": {
+            "origin": 0.35,
+            "destination": 0.35,
+            "vehicle": 0.10,
+            "distance": 0.10,
+            "rate": 0.10
+        },
+        "distance_decay_km": 15.0,
+        "rate_decay_pct": 30.0,
+        "edge_threshold": 0.60,
+        "dynamic": {
+            "enabled": true,
+            "min_threshold": 0.50,
+            "use_distance": true
+        }
+    },
+    "min_fare_model": {
+        "enabled": true,
+        "short_run_km": 10.0,
+        "table": {
+            "FLATBED": 200.0,
+            "LOWBED": 600.0,
+            "3 TON PU": 150.0,
+            "7 TON PU": 200.0,
+            "DEFAULT": 200.0
+        }
+    },
+    "region_rules": {
+        "MUSSAFAH": [
+            "MUSSAFAH",
+            "ICAD",
+            "MARKAZ",
+            "M44"
+        ],
+        "MINA": [
+            "MINA",
+            "FREEPORT",
+            "ZAYED",
+            "JDN"
+        ],
+        "MIRFA": [
+            "MIRFA"
+        ],
+        "SHUWEIHAT": [
+            "SHUWEIHAT",
+            "S2",
+            "S3"
+        ]
+    },
+    "fallbacks": {
+        "use_region_pool": true,
+        "km_tolerance": 15.0,
+        "perkm_tolerance_pct": 30.0
+    },
+    "alias_suggestion": {
+        "enabled": true,
+        "min_similarity": 0.70
+    }
+}

@@ -1,0 +1,121 @@
+{
+    "version": "2.3.0",
+    "fx_policy": {
+        "USD_AED_fixed": 3.6725
+    },
+    "cost_guard_bands": {
+        "pass": 2.0,
+        "warn": 5.0,
+        "high": 10.0
+    },
+    "autofail_threshold_pct": 15.0,
+    "isoforest": {
+        "enabled": true,
+        "contamination": 0.04,
+        "n_estimators": 200,
+        "random_state": 42
+    },
+    "short_run_rules": {
+        "short_run_thresh_km": 10.0,
+        "fixed_cost_suspect_km": 2.0
+    },
+    "similarity": {
+        "weights": {
+            "origin": 0.35,
+            "destination": 0.35,
+            "vehicle": 0.10,
+            "distance": 0.10,
+            "rate": 0.10
+        },
+        "distance_decay_km": 15.0,
+        "rate_decay_pct": 30.0,
+        "edge_threshold": 0.60,
+        "dynamic": {
+            "enabled": true,
+            "min_threshold": 0.50,
+            "use_distance": true
+        }
+    },
+    "min_fare_model": {
+        "enabled": true,
+        "short_run_km": 10.0,
+        "table": {
+            "FLATBED": 200.0,
+            "LOWBED": 600.0,
+            "3 TON PU": 150.0,
+            "7 TON PU": 200.0,
+            "DEFAULT": 200.0
+        }
+    },
+    "region_rules": {
+        "MUSSAFAH": [
+            "MUSSAFAH",
+            "ICAD",
+            "MARKAZ",
+            "M44",
+            "PRESTIGE"
+        ],
+        "MINA": [
+            "MINA",
+            "FREEPORT",
+            "ZAYED",
+            "JDN",
+            "PORT"
+        ],
+        "MIRFA": [
+            "MIRFA",
+            "PMO"
+        ],
+        "SHUWEIHAT": [
+            "SHUWEIHAT",
+            "S2",
+            "S3",
+            "POWER"
+        ]
+    },
+    "fallbacks": {
+        "use_region_pool": true,
+        "km_tolerance": 15.0,
+        "perkm_tolerance_pct": 30.0
+    },
+    "adjusters": {
+        "enabled": true,
+        "rules": [
+            {
+                "if_vehicle_contains": "HAZMAT",
+                "rate_multiplier": 1.15
+            },
+            {
+                "if_vehicle_contains": "CICPA",
+                "rate_multiplier": 1.08
+            }
+        ]
+    },
+    "unit_conversion": {
+        "approved": false,
+        "rules": {}
+    },
+    "risk_based_review": {
+        "enabled": true,
+        "score_formula": {
+            "delta_weight": 0.4,
+            "anomaly_weight": 0.3,
+            "cert_weight": 0.2,
+            "signature_weight": 0.1
+        },
+        "trigger_threshold": 0.8
+    },
+    "special_zone": {
+        "enabled": true,
+        "policy": "executed_ledger_trumps_guard",
+        "label": "SPECIAL_PASS"
+    },
+    "alias_suggestion": {
+        "enabled": true,
+        "min_similarity": 0.70
+    },
+    "pii_mask": {
+        "enabled": true,
+        "mask_char": "•"
+    }
+}

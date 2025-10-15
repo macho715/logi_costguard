@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-10-14T22:05:50.335921",
+  "summary": {
+    "ARCHIVE:Analysis_Scripts": 18,
+    "KEEP": 13,
+    "ARCHIVE:Debug_Scripts": 7,
+    "ARCHIVE:Test_Scripts": 11,
+    "ARCHIVE:Backup_Files": 6,
+    "ARCHIVE:Other_Scripts": 4
+  },
+  "details": {
+    "ARCHIVE:Analysis_Scripts": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_excel_structure_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_final_validation_results_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_fixed_rates_impact_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_missing_contracts.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_pdf_matching_failure_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_remaining_fails_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_sept_sheet_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_transportation_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_validation_issues_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_vba_logic_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_code_quality_auditor_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_contract_validation_gap_analysis_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_dependency_analyzer_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_integration_architecture_designer_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_performance_analyzer_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_tdd_strategy_planner_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\logi_technical_debt_manager_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\show_final_fails_251014.py"
+    ],
+    "KEEP": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\analyze_hardcoding_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\classify_and_archive_files_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\excel_data_processor.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\fix_hardcoded_paths_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\generate_final_report_pandas_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\generate_vba_integrated_report.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\invoice_pdf_integration.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\run_full_validation_with_config_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\shpt_audit_system.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\shpt_sept_2025_enhanced_audit.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\validate_masterdata_with_config_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\hardcoding_analysis_report_251014.json",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\TRANSPORTATION_LANE_INTEGRATION_COMPLETE_251014.md"
+    ],
+    "ARCHIVE:Debug_Scripts": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\check_all_columns_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\check_latest_pdf_count_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\check_pdf_filenames_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\debug_one_transport_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\debug_pdf_matching_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\debug_transportation_lookup_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\trace_transport_validation_251014.py"
+    ],
+    "ARCHIVE:Test_Scripts": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\compare_excel_structures_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\compare_sept_mode_improvement_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\test_contract_improvement.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\test_contract_integration_tdd.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\test_contract_validation.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\test_pdf_integration.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\test_route_parsing_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\verify_contract_coverage_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\verify_contract_results.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\verify_excel_structure_detailed_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\verify_pdf_integration_251014.py"
+    ],
+    "ARCHIVE:Backup_Files": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\comprehensive_invoice_validator_backup.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\create_enhanced_excel_report.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\create_enhanced_excel_report_backup.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\create_excel_report.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\generate_comprehensive_excel_report.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\generate_final_excel_report.py"
+    ],
+    "ARCHIVE:Other_Scripts": [
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\find_transportation_rates_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\insert_validation_to_original_251014.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\run_comprehensive_validation.py",
+      "C:\\Users\\minky\\Downloads\\HVDC_Invoice_Audit-20251012T195441Z-1-001\\HVDC_Invoice_Audit\\01_DSV_SHPT\\Core_Systems\\run_shpt_sept2025.py"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "recap_card": [
+    "P:: invoice-verify · join-ref · cost-guard",
+    "R:: Δ≤2/5/10 · AutoFail>15 · FX fixed USD↔AED",
+    "I:: {total:44, pass:7, warn:1, high:1, critical:7}",
+    "S:: normalize→join(exact→sim≥0.60)→region→minfare→adjust→export",
+    "M:: {items.csv, recap.card, proof.artifact.json}"
+  ],
+  "artifact": {
+    "artifact_id": "DomesticRefVerify-20251012-225738",
+    "counts": {
+      "PENDING_REVIEW": 30,
+      "SPECIAL_PASS": 7,
+      "VERIFIED": 5,
+      "FAIL": 2
+    },
+    "bands": {
+      "UNKNOWN": 28,
+      "PASS": 7,
+      "CRITICAL": 7,
+      "WARN": 1,
+      "HIGH": 1
+    },
+    "ref_methods": {
+      "none": 28,
+      "direct": 7,
+      "region_pool": 6,
+      "similarity": 3
+    }
+  },
+  "sha256": "f42953785e03ec6f50a4445eb456e709fcd90e6640a55ba76d6aea1e9f555d44"
+}

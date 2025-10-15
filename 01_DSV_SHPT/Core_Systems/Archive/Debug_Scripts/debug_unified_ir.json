@@ -1,0 +1,107 @@
+{
+  "doc_id": "HVDC-ADOPT-SCT-0126_CarrierInvoice.pdf",
+  "engine": "ade",
+  "pages": 1,
+  "blocks": [
+    {
+      "type": "table",
+      "page": 1,
+      "table_id": "table_1_0",
+      "rows": [
+        [
+          "CMA CGM SHIPPING AGENCY SE SOLE\nPROPRIETORSHIP L.L.C.\nPO BOX 111530, AL SHAHEEN TOWER UNIT 802,\nAL SALAM ST. ABU DHABI, UNITED ARAB EMIRATES,\nTEL:+97126797704 FAX:+97126797706",
+          null,
+          null,
+          null
+        ],
+        [
+          "Bill of Lading: CHN2595234 Booking Ref: CHN2595234\nCustomer: 0002238479/001",
+          null,
+          "TAX INVOICE # COPY\nAECI0056950\nDate: 22-AUG-2025",
+          null
+        ],
+        [
+          "Invoice To: DSV SOLUTIONS PJSC\nABU DHABI CITY MUNICIPALITY\nBUILDING NO M 19 MUSSAFAH\nINDUSTRIAL AREA\nABU DHABI/\nUNITED ARAB EMIRATES\nTRN #: 100047214000003",
+          null,
+          "Payable to: C M A - CGM SHIPPING AGENCY- S E - SOLE\nPROPRIETORSHIP L.L.C.\nSE SOLE PROPRIETORSHIP L.L.C.\nPO BOX 111530\nAL SHAHEEN TOWER 802.\nAL SALAM ST.\nABU DHABI/\nUNITED ARAB EMIRATES\nTEL:+97142113030 FAX:\nTRN #: 100213778200003\nCustomer Service Hotline: +971 4 211 3030\nInvoiced By: Lea NASSIF Tel:",
+          null
+        ],
+        [
+          "",
+          "Voyage: 0MDEIE1MA Local Voyage Ref: - Vessel: CMA CGM PEGASUS Call Date: 27 AUG 2025",
+          null,
+          null
+        ],
+        [
+          "Place of Receipt: - Discharge Port: KHALIFA PORT, ABU DHABI\nLoad Port: SHANGHAI Place of Delivery: -\nPackage Qty\n20ST 1\n40HC 2\nContainer Number(s): CMAU2623154 TCNU4356762 TGHU8788690\nQuote Reference: QSPOT8941052 Service Contract: - Rate Application Date: 08-AUG-2025\nSize/Type Charge Description Tax Based on Rate Currency Amount Amount in AED",
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          "Amount in AED"
+        ],
+        [
+          "Container Return Service Charge AED 535.00",
+          null,
+          null,
+          "535.00"
+        ],
+        [
+          "Currency Charge Totals",
+          null,
+          null,
+          ""
+        ],
+        [
+          null,
+          null,
+          null,
+          ""
+        ],
+        [
+          null,
+          null,
+          null,
+          ""
+        ]
+      ],
+      "bbox": null
+    },
+    {
+      "type": "table",
+      "page": 1,
+      "table_id": "table_1_1",
+      "rows": [
+        [
+          "(C)For and on behalf of CMA - CGM\nBOULEVARD JACQUES SAADE\n4 QUAI D'ARENC\nCEDEX 02\n13235 MARSEILLE-FRANCE\nFR72562024422 Carrier No. AECMA2524128",
+          "Total Amount:\nPayable by 06-OCT-2025\nOur invoices are payable in full amount to CMA CGM on or prior due date, free of\ncharges, without any deduction nor discount for advance payment. Penalties for late\npayments are 0.75% per month pro rata.\nAll bank charges are for the account of the payer-remitter."
+        ],
+        [
+          "IBAN : AE110440000001700017201 SWIFT : SCBLAEADXXX\nCMA CGM SHIPPING AGENCY SE SOLE PROPRIETORSHIP LLC\nSTANDARD CHARTERED BANK\nABU DHABI PRESTIGE TOWER\nGR FLOOR W10 C10 KHALIDIYA\nABU DHABI\nUNITED ARAB EMIRATES AZ\nAccount Number.01700017201",
+          null
+        ],
+        [
+          null,
+          "For Reference ( AED ) Total VAT:\nTotal Amount:"
+        ]
+      ],
+      "bbox": null
+    },
+    {
+      "type": "text",
+      "page": 1,
+      "text": "CMA CGM SHIPPING AGENCY SE SOLE\nPROPRIETORSHIP L.L.C.\nPO BOX 111530, AL SHAHEEN TOWER UNIT 802,\nAL SALAM ST. ABU DHABI, UNITED ARAB EMIRATES,\nTEL:+97126797704 FAX:+97126797706\nTAX INVOICE # COPY\nBill of Lading: CHN2595234 Booking Ref: CHN2595234 AECI0056950\nCustomer: 0002238479/001\nDate: 22-AUG-2025\nInvoice To: DSV SOLUTIONS PJSC Payable to: C M A - CGM SHIPPING AGENCY- S E - SOLE\nABU DHABI CITY MUNICIPALITY PROPRIETORSHIP L.L.C.\nBUILDING NO M 19 MUSSAFAH SE SOLE PROPRIETORSHIP L.L.C.\nINDUSTRIAL AREA PO BOX 111530\nABU DHABI/ AL SHAHEEN TOWER 802.\nUNITED ARAB EMIRATES AL SALAM ST.\nABU DHABI/\nUNITED ARAB EMIRATES\nTRN #: 100047214000003 TEL:+97142113030 FAX:\nTRN #: 100213778200003\nCustomer Service Hotline: +971 4 211 3030\nInvoiced By: Lea NASSIF Tel:\nVoyage: 0MDEIE1MA Local Voyage Ref: - Vessel: CMA CGM PEGASUS Call Date: 27 AUG 2025\nPlace of Receipt: - Discharge Port: KHALIFA PORT, ABU DHABI\nLoad Port: SHANGHAI Place of Delivery: -\nPackage Qty\n20ST 1\n40HC 2\nContainer Number(s): CMAU2623154 TCNU4356762 TGHU8788690\nQuote Reference: QSPOT8941052 Service Contract: - Rate Application Date: 08-AUG-2025\nSize/Type Charge Description Tax Based on Rate Currency Amount Amount in AED\nContainer Return Service Charge AED 535.00 535.00\nCurrency Charge Totals\nAED\nVAT applied as indicated on charges Total Excluding Tax\nC2 Auto Liquidation - Article 196 Directive 2006/112/CE VAT due by the client if no exemption applies - Article 283-2 du\nCGI - TVA due par le preneur. Services acquired by the client for its business activity - Article 44 Directive\n2006/112/CE\nTotal VAT 5.00%\nTotal VAT\nTotal Including Tax\nReport any dispute within 3 Business days through MY CMA CGM portal -Invoice Dashboard https://www.cma-cgm.com/ebusiness/invoice\nInvoice / BL must be mentioned on payment advice\n(C)For and on behalf of CMA - CGM\nBOULEVARD JACQUES SAADE\n4 QUAI D'ARENC\nCEDEX 02\n13235 MARSEILLE-FRANCE\nFR72562024422 Carrier No. AECMA2524128\nTotal Amount:\nIBAN : AE110440000001700017201 SWIFT : SCBLAEADXXX\nCMA CGM SHIPPING AGENCY SE SOLE PROPRIETORSHIP LLC Payable by 06-OCT-2025\nSTANDARD CHARTERED BANK\nABU DHABI PRESTIGE TOWER Our invoices are payable in full amount to CMA CGM on or prior due date, free of\nGR FLOOR W10 C10 KHALIDIYA charges, without any deduction nor discount for advance payment. Penalties for late\nABU DHABI payments are 0.75% per month pro rata.\nUNITED ARAB EMIRATES AZ All bank charges are for the account of the payer-remitter.\nAccount Number.01700017201\nFor Reference ( AED ) Total VAT:\nTotal Amount:\nInvoices are system generated and does not require a stamp and signature\nPage 1 of 1",
+      "bbox": null
+    }
+  ],
+  "meta": {
+    "confidence": 0.9,
+    "filename": "HVDC-ADOPT-SCT-0126_CarrierInvoice.pdf",
+    "parser": "pdfplumber"
+  },
+  "doc_type": "invoice"
+}

@@ -1,0 +1,40 @@
+{
+  "artifact_id": "DomesticInvoiceAudit-20251012-130311",
+  "inputs": {
+    "file": "DOMESTIC_with_distances.xlsx",
+    "rows": 519
+  },
+  "logic": {
+    "ref": "ApprovedLaneMap (if available) -> dataset median fallback",
+    "cg_bands": {
+      "PASS": "<=2",
+      "WARN": "<=5",
+      "HIGH": "<=10",
+      "CRITICAL": ">10"
+    },
+    "auto_fail_delta_pct": ">15",
+    "short_run_km": 10.0,
+    "anomaly": "IsolationForest(4%)"
+  },
+  "outputs": {
+    "counts": {
+      "cg_band": {
+        "PASS": 456,
+        "CRITICAL": 50,
+        "WARN": 7,
+        "HIGH": 5,
+        "REF_MISSING": 1
+      },
+      "verification": {
+        "VERIFIED": 332,
+        "PENDING_REVIEW": 137,
+        "FAIL": 50
+      }
+    },
+    "files": {
+      "report_xlsx": "domestic_patched_report.xlsx"
+    }
+  },
+  "recap_card": "P:: invoice-verify \u00b7 lane-join \u00b7 \u0394% compute\nR:: COST-GUARD \u0394\u22642/5/10 \u00b7 AutoFail>15 \u00b7 HallucinationBan\nI:: {sources:['Domestic_invoice_distance.xlsx','ApprovedLaneMap?','Inland_Trucking_Rate_Table_v2.1?']}\nS:: plan\u2192normalize\u2192join\u2192score\u2192export\nM:: {report.xlsx, proof.artifact(json, sha256)}",
+  "proof_hash": "afbd5776f971f44ecbcfc24caa549999dd3db2bea20a24a34c23ff8c0612b489"
+}

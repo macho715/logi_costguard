@@ -1,0 +1,46 @@
+{
+    "metadata": {
+        "version": "1.0.0",
+        "created": "2025-10-14",
+        "description": "Category Synonym Dictionary for normalization",
+        "purpose": "Improve PDF rate matching by standardizing category descriptions"
+    },
+    "charge_types": {
+        "CHARGES": "FEE",
+        "CHARGE": "FEE",
+        "FEES": "FEE"
+    },
+    "transportation": {
+        "TRUCKING": "TRANSPORTATION",
+        "HAULAGE": "TRANSPORTATION",
+        "TRANSPORT": "TRANSPORTATION",
+        "INLAND": "TRANSPORTATION"
+    },
+    "handling": {
+        "HAND": "HANDLING",
+        "H/L": "HANDLING",
+        "HANDL": "HANDLING"
+    },
+    "container": {
+        "CNTR": "CONTAINER",
+        "CNT": "CONTAINER",
+        "BOX": "CONTAINER",
+        "CONT": "CONTAINER"
+    },
+    "terminal": {
+        "THC": "TERMINAL HANDLING",
+        "TERM": "TERMINAL"
+    },
+    "customs": {
+        "CUS": "CUSTOMS",
+        "CUSTOM": "CUSTOMS"
+    },
+    "delivery": {
+        "DEL": "DELIVERY",
+        "DELIV": "DELIVERY"
+    },
+    "document": {
+        "DOC": "DOCUMENT",
+        "DOCS": "DOCUMENT"
+    }
+}

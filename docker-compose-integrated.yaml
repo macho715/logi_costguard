@@ -1,0 +1,137 @@
+version: "3.8"
+
+# HVDC Invoice Audit + Hybrid Doc System 통합 배포
+# FastAPI + Celery + RabbitMQ + Redis + HVDC Audit
+
+services:
+  # ==================== Hybrid Doc System ====================
+
+  # FastAPI Upload Service
+  hybrid-api:
+    build:
+      context: ./hybrid_doc_system_artifacts_v1/services/api
+      dockerfile: Dockerfile
+    container_name: hvdc-hybrid-api
+    ports:
+      - "8080:8080"
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ADE_API_KEY=${ADE_API_KEY:-}
+      - ADE_ENDPOINT=${ADE_ENDPOINT:-https://api.landing.ai}
+      - ROUTING_RULES_PATH=/config/routing_rules_hvdc.json
+      - IR_SCHEMA_PATH=/config/unified_ir_schema.yaml
+    volumes:
+      - ./hybrid_doc_system/config:/config:ro
+      - ./HVDC_Invoice_Audit/01_DSV_SHPT/Data:/data:ro
+      - ./hybrid_cache:/cache
+    depends_on:
+      - rabbitmq
+      - redis
+    networks:
+      - hvdc-network
+    restart: unless-stopped
+
+  # Celery Worker Pool
+  hybrid-worker:
+    build:
+      context: ./hybrid_doc_system_artifacts_v1/services/worker
+      dockerfile: Dockerfile
+    container_name: hvdc-hybrid-worker
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ADE_API_KEY=${ADE_API_KEY:-}
+      - ADE_ENDPOINT=${ADE_ENDPOINT:-https://api.landing.ai}
+      - ROUTING_RULES_PATH=/config/routing_rules_hvdc.json
+      - IR_SCHEMA_PATH=/config/unified_ir_schema.yaml
+      - DOCLING_WORKERS=2
+    volumes:
+      - ./hybrid_doc_system/config:/config:ro
+      - ./HVDC_Invoice_Audit/01_DSV_SHPT/Data:/data:ro
+      - ./hybrid_cache:/cache
+    depends_on:
+      - rabbitmq
+      - redis
+    networks:
+      - hvdc-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+
+  # ==================== Infrastructure ====================
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: hvdc-rabbitmq
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - hvdc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Result Backend
+  redis:
+    image: redis:7-alpine
+    container_name: hvdc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hvdc-network
+    restart: unless-stopped
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+# ==================== HVDC Audit System (선택) ====================
+
+# Python 기반 Audit CLI (선택적 서비스화)
+# hvdc-audit:
+#   build:
+#     context: ./HVDC_Invoice_Audit/01_DSV_SHPT
+#     dockerfile: Dockerfile
+#   container_name: hvdc-audit-service
+#   ports:
+#     - "8000:8000"
+#   environment:
+#     - HYBRID_API_URL=http://hybrid-api:8080
+#     - RATE_CONFIG_PATH=/app/Rate
+#   volumes:
+#     - ./HVDC_Invoice_Audit/01_DSV_SHPT:/app
+#     - ./HVDC_Invoice_Audit/Rate:/app/Rate:ro
+#     - ./HVDC_Invoice_Audit/01_DSV_SHPT/Results:/app/Results
+#   depends_on:
+#     - hybrid-api
+#   networks:
+#     - hvdc-network
+#   restart: unless-stopped
+
+networks:
+  hvdc-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+
