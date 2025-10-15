@@ -2,8 +2,31 @@
 
 **System Type**: Shipment Invoice Processing (Sea + Air)
 **Contract No**: HVDC-SHPT-2025-001
-**Version**: v4.1-PATCHED
+**Version**: v4.2-ANOMALY-DETECTION
 **Last Updated**: 2025-10-16
+
+---
+
+## 🤖 새로운 기능 (v4.2)
+
+### Anomaly Detection
+- **z-score 모델**: 통계적 이상치 탐지
+- **IsolationForest 모델**: 머신러닝 기반 이상 패턴 감지
+- **Lane-aware**: 레인별 개별 설정 가능
+- **Per-lane toggle**: 특정 레인만 선택적 활성화
+
+### Risk-Based Review Scoring
+- **Blended Risk Score**: 4가지 신호 통합
+  - Delta (요율 차이)
+  - Anomaly (이상치 점수)
+  - Certification (인증 상태)
+  - Signature (서명 검증)
+- **Configurable Weights**: 각 신호의 가중치 조정 가능
+- **Trigger Threshold**: 임계값 기반 자동 플래그
+
+### 설정 파일
+- `Rate/config_shpt_lanes.json`: Anomaly detection 설정
+- `Rate/config_validation_rules.json`: Risk-based review 설정
 
 ---
 

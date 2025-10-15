@@ -626,4 +626,111 @@ elif charge_group == "PortalFee" and delta_pct is not None:
 | `REDIS_URL` | `redis://localhost:6379` | Redis 브로커 URL |
 | `LOG_LEVEL` | `INFO` | 로깅 레벨 |
 
+---
+
+## 🤖 Anomaly Detection & Risk Scoring (v4.2+)
+
+### Anomaly Detection Service
+
+#### 설정 구조
+```json
+{
+  "anomaly_detection": {
+    "enabled": true,
+    "model": {
+      "type": "robust_zscore",
+      "params": {
+        "threshold": 3.0,
+        "min_samples": 10
+      }
+    },
+    "risk_thresholds": {
+      "low": 1.0,
+      "medium": 2.0,
+      "high": 3.0
+    }
+  }
+}
+```
+
+#### 알고리즘 흐름
+1. **데이터 수집**: 레인별 historical data
+2. **통계 계산**: 평균, 표준편차, 중앙값
+3. **z-score 계산**: `(value - mean) / std`
+4. **Risk Level 결정**: threshold 기반 분류
+5. **Anomaly Score 반환**: 0-100 스케일
+
+#### 함수 매핑
+- **파일**: `Core_Systems/anomaly_detection.py`
+- **클래스**: `AnomalyDetectionService`
+- **메서드**: `detect_anomalies()` (line 85-120)
+- **호출**: `shipment_audit_engine.py:129-131`
+
+### Risk-Based Review Scoring
+
+#### 설정 구조
+```json
+{
+  "risk_based_review": {
+    "enabled": true,
+    "weights": {
+      "delta": 0.4,
+      "anomaly": 0.3,
+      "certification": 0.2,
+      "signature": 0.1
+    },
+    "trigger_threshold": 0.8
+  }
+}
+```
+
+#### 점수 계산 공식
+```
+Risk Score = (delta_weight × delta_score) + 
+             (anomaly_weight × anomaly_score) + 
+             (certification_weight × cert_score) + 
+             (signature_weight × sig_score)
+```
+
+#### 함수 매핑
+- **파일**: `Core_Systems/anomaly_detection_service.py`
+- **클래스**: `AnomalyDetectionService`
+- **메서드**: `calculate_risk_score()` (line 45-80)
+- **호출**: `shipment_audit_engine.py:_process_item()`
+
+### Lane-Aware Detection
+
+#### 레인별 설정
+```json
+{
+  "lanes": {
+    "SCT0126": {
+      "anomaly_detection": {
+        "enabled": true,
+        "model_type": "robust_zscore"
+      }
+    },
+    "HE0471": {
+      "anomaly_detection": {
+        "enabled": false
+      }
+    }
+  }
+}
+```
+
+#### 처리 흐름
+1. **레인 식별**: shipment_id 기반
+2. **설정 조회**: lane-specific config
+3. **조건부 실행**: enabled=true인 경우만
+4. **결과 통합**: 전체 risk score에 반영
+
+### 통합 검증 흐름
+
+```
+Invoice Item → Lane Detection → Anomaly Detection → Risk Scoring → Final Status
+     ↓              ↓                ↓                  ↓             ↓
+  Item Data → Lane Config → Anomaly Score → Risk Score → PASS/WARN/FAIL
+```
+
 필요하면 위 로직을 바로 돌리는 **샘플 입력→산출 JSON/표 템플릿**도 뽑아줄게.
