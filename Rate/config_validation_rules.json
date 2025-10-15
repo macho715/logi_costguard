@@ -85,5 +85,15 @@
         "include_supporting_docs": true,
         "generate_summary_report": true,
         "timestamp_format": "%Y%m%d_%H%M%S"
+    },
+    "risk_based_review": {
+        "enabled": true,
+        "score_formula": {
+            "delta_weight": 0.4,
+            "anomaly_weight": 0.3,
+            "cert_weight": 0.2,
+            "signature_weight": 0.1
+        },
+        "trigger_threshold": 0.8
     }
 }

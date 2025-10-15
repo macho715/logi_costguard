@@ -370,6 +370,36 @@ class ConfigurationManager:
         gate_rules = self.validation_rules_config.get("gate_validation_rules", {})
         return gate_rules.get(gate_name)
 
+    def get_risk_based_review_config(self) -> Dict[str, Any]:
+        """Risk-based review 설정 조회"""
+        if not self.is_loaded:
+            self.load_all_configs()
+
+        default_config = {
+            "enabled": False,
+            "trigger_threshold": 0.8,
+            "score_formula": {
+                "delta_weight": 0.4,
+                "anomaly_weight": 0.3,
+                "cert_weight": 0.2,
+                "signature_weight": 0.1,
+            },
+        }
+
+        config = self.validation_rules_config.get("risk_based_review", {})
+        merged = default_config.copy()
+
+        merged["enabled"] = bool(config.get("enabled", merged["enabled"]))
+        merged["trigger_threshold"] = float(
+            config.get("trigger_threshold", merged["trigger_threshold"])
+        )
+
+        score_formula = default_config["score_formula"].copy()
+        score_formula.update(config.get("score_formula", {}))
+        merged["score_formula"] = score_formula
+
+        return merged
+
     def get_config_summary(self) -> Dict[str, Any]:
         """설정 요약 정보"""
         if not self.is_loaded:

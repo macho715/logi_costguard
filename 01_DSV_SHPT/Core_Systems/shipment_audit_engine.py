@@ -35,6 +35,7 @@ from portal_fee import (
     get_portal_fee_band,
 )
 from rate_service import RateService
+from anomaly_detection_service import AnomalyDetectionService
 
 # PDF Integration import
 try:
@@ -119,6 +120,16 @@ class ShipmentAuditEngine:
 
         # FX 환율 (ConfigurationManager에서 로드)
         self.fx_rate = self.config_manager.get_fx_rate("USD", "AED")
+
+        # Risk-based review 설정 및 서비스 초기화
+        self.risk_based_review_config = (
+            self.config_manager.get_risk_based_review_config()
+        )
+        self.anomaly_service = AnomalyDetectionService(
+            self.risk_based_review_config.get("score_formula"),
+            self.risk_based_review_config.get("trigger_threshold", 0.8),
+            self.cost_guard_bands.get("autofail", 15.0),
+        )
 
         # Rate Service 초기화 (Issue #4 패치: 중복 로직 통합)
         self.rate_service = RateService(self.config_manager)
@@ -264,6 +275,67 @@ class ShipmentAuditEngine:
             "gates": gates,
         }
 
+    def _apply_risk_based_review(self, validation: Dict[str, Any]) -> None:
+        """Risk 기반 리뷰 적용/Apply risk-based review decision."""
+
+        if not self.risk_based_review_config.get("enabled", False):
+            return
+
+        anomaly_indicator = 0.0
+
+        if validation.get("issues"):
+            anomaly_indicator = max(anomaly_indicator, 0.5)
+
+        if validation.get("gate_status") == "FAIL":
+            anomaly_indicator = max(anomaly_indicator, 1.0)
+
+        pdf_status = None
+        if isinstance(validation.get("pdf_validation"), dict):
+            pdf_status = validation["pdf_validation"].get("cross_doc_status")
+
+        if pdf_status == "FAIL":
+            anomaly_indicator = max(anomaly_indicator, 1.0)
+        elif pdf_status == "WARNING":
+            anomaly_indicator = max(anomaly_indicator, 0.5)
+
+        if validation.get("demurrage_risk"):
+            anomaly_indicator = max(anomaly_indicator, 1.0)
+
+        gates = validation.get("gates", {}) or {}
+        certification_missing = any(
+            "CERT" in gate_name.upper() and gate.get("status") == "FAIL"
+            for gate_name, gate in gates.items()
+        )
+        signature_risk = any(
+            "SIGNATURE" in gate_name.upper() and gate.get("status") == "FAIL"
+            for gate_name, gate in gates.items()
+        )
+
+        risk = self.anomaly_service.compute_risk_score(
+            delta_pct=validation.get("delta_pct"),
+            anomaly_indicator=anomaly_indicator,
+            certification_missing=certification_missing,
+            signature_risk=signature_risk,
+        )
+
+        validation["risk_score"] = risk.score
+        validation["risk_components"] = risk.components
+        validation["risk_triggered"] = risk.triggered
+
+        if risk.triggered and validation.get("status") not in ("FAIL", "ERROR"):
+            if validation.get("status") == "PASS":
+                validation["status"] = "REVIEW_NEEDED"
+
+            if validation.get("flag") == "OK":
+                validation["flag"] = "RISK"
+
+            message = (
+                f"Risk-based review triggered (score {risk.score:.2f} >= "
+                f"threshold {self.anomaly_service.trigger_threshold:.2f})"
+            )
+            if message not in validation["issues"]:
+                validation["issues"].append(message)
+
     # ==================== Excel 처리 메서드 ====================
 
     def load_invoice_sheets(self):
@@ -399,6 +471,15 @@ class ShipmentAuditEngine:
             "tolerance": 0.03,  # 기본 3%
             "ref_rate_usd": None,
             "doc_aed": None,
+            "gates": {},
+            "risk_score": 0.0,
+            "risk_components": {
+                "delta": 0.0,
+                "anomaly": 0.0,
+                "certification": 0.0,
+                "signature": 0.0,
+            },
+            "risk_triggered": False,
         }
 
         try:
@@ -500,6 +581,7 @@ class ShipmentAuditEngine:
             validation["gate_status"] = gate_result["Gate_Status"]
             validation["gate_score"] = gate_result["Gate_Score"]
             validation["gate_fails"] = gate_result["Gate_Fails"]
+            validation["gates"] = gate_result.get("gates", {})
 
             # 4. 최종 상태 결정
             if not validation["issues"] and validation["gate_status"] == "PASS":
@@ -507,6 +589,9 @@ class ShipmentAuditEngine:
             elif validation["issues"] or validation["gate_status"] == "FAIL":
                 if validation["status"] != "FAIL":
                     validation["status"] = "REVIEW_NEEDED"
+
+            # 5. Risk 기반 리뷰 적용
+            self._apply_risk_based_review(validation)
 
         except Exception as e:
             validation["status"] = "ERROR"
