@@ -126,11 +126,9 @@ class ShipmentAuditEngine:
         self.risk_based_review_config = (
             self.config_manager.get_risk_based_review_config()
         )
-        self.anomaly_service = AnomalyDetectionService(
-            self.risk_based_review_config.get("score_formula"),
-            self.risk_based_review_config.get("trigger_threshold", 0.8),
-            self.cost_guard_bands.get("autofail", 15.0),
-        )
+        # AnomalyDetectionService는 config 딕셔너리를 받음
+        anomaly_config = self.config_manager.get_anomaly_detection_config()
+        self.anomaly_service = AnomalyDetectionService(anomaly_config)
 
         # Rate Service 초기화 (Issue #4 패치: 중복 로직 통합)
         self.rate_service = RateService(self.config_manager)
