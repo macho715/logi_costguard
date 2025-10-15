@@ -138,7 +138,9 @@ class ShipmentAuditEngine:
 
         # Anomaly Detection 초기화
         self.anomaly_base_config = self.config_manager.get_anomaly_detection_config()
-        self.anomaly_detectors: Dict[Optional[str], Optional[AnomalyDetectionService]] = {}
+        self.anomaly_detectors: Dict[
+            Optional[str], Optional[AnomalyDetectionService]
+        ] = {}
         self.anomaly_disabled_lanes: Set[str] = set()
         self.anomaly_detectors[None] = self._create_anomaly_detector(
             self.anomaly_base_config
@@ -661,7 +663,9 @@ class ShipmentAuditEngine:
                             validation["flag"] = "WARN"
             else:
                 disabled_reason = (
-                    "lane_disabled" if lane_id in self.anomaly_disabled_lanes else "disabled"
+                    "lane_disabled"
+                    if lane_id in self.anomaly_disabled_lanes
+                    else "disabled"
                 )
                 anomaly_payload.update(
                     {
@@ -669,7 +673,9 @@ class ShipmentAuditEngine:
                         "score": 0.0,
                         "risk_level": "DISABLED",
                         "flagged": False,
-                        "model": self.anomaly_base_config.get("model", {}).get("type", "none"),
+                        "model": self.anomaly_base_config.get("model", {}).get(
+                            "type", "none"
+                        ),
                         "details": {"reason": disabled_reason},
                     }
                 )
@@ -1001,9 +1007,7 @@ class ShipmentAuditEngine:
 
         return self.anomaly_detectors.get(lane_id)
 
-    def _resolve_lane_metadata(
-        self, item: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _resolve_lane_metadata(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Lane 메타데이터 계산 / Resolve lane metadata for item."""
 
         description = item.get("description", "")
@@ -1059,9 +1063,9 @@ class ShipmentAuditEngine:
             summary["total_scored"] += batch_result.get("total_scored", 0)
             summary["flagged_items"] += batch_result.get("flagged_items", 0)
             for risk_level, count in batch_result.get("risk_counts", {}).items():
-                summary["risk_counts"][risk_level] = summary["risk_counts"].get(
-                    risk_level, 0
-                ) + count
+                summary["risk_counts"][risk_level] = (
+                    summary["risk_counts"].get(risk_level, 0) + count
+                )
             combined_scores.append(
                 batch_result.get("average_score", 0.0)
                 * batch_result.get("total_scored", 0)
