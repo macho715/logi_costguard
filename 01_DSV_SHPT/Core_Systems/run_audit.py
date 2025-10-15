@@ -122,6 +122,38 @@ def run_full_validation():
             f"  Avg time/item: {elapsed_time / results['summary']['total_items'] * 1000:.2f} ms"
         )
 
+        # Enhanced Excel Report 생성
+        print(f"\n[STEP 4] Creating Enhanced Excel Report...")
+        try:
+            from create_enhanced_excel_report import create_enhanced_excel_report
+            
+            # 검증 결과 DataFrame 준비
+            validation_df = results.get('dataframe', None)
+            if validation_df is not None:
+                # Enhanced Excel Report 생성
+                excel_output_path = f"{audit_system.out_dir}/Excel/shpt_sept_2025_enhanced_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                
+                create_enhanced_excel_report(
+                    validation_df,
+                    excel_output_path,
+                    preserve_formatting=True
+                )
+                
+                print(f"  [OK] Enhanced Excel report created: {excel_output_path}")
+                print(f"  [INFO] Report includes new columns:")
+                print(f"    - Anomaly Score (0-100)")
+                print(f"    - Risk Score (0-1.0)")
+                print(f"    - Risk Level (LOW/MEDIUM/HIGH/CRITICAL)")
+                print(f"    - Anomaly Details")
+                print(f"    - Risk Components")
+            else:
+                print(f"  [WARNING] No validation data available for Excel report")
+                
+        except ImportError as e:
+            print(f"  [WARNING] Enhanced Excel report module not available: {e}")
+        except Exception as e:
+            print(f"  [ERROR] Failed to create Enhanced Excel report: {e}")
+
         # 결과 파일 위치
         print(f"\n[OUTPUT FILES]")
         print(f"  Results directory: {audit_system.out_dir}")
