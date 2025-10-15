@@ -2,7 +2,7 @@
     "metadata": {
         "version": "1.0.0",
         "created": "2025-10-14",
-        "description": "SHPT Lane Map Configuration - 해상 및 항공 운송 경로 요율",
+        "description": "SHPT Lane Map Configuration - \ud574\uc0c1 \ubc0f \ud56d\uacf5 \uc6b4\uc1a1 \uacbd\ub85c \uc694\uc728",
         "source": "shpt_audit_system.py lanes + contract_inland_trucking_charge_rates_v1.3.md",
         "currency": "USD",
         "effective_date": "2025-09-01"
@@ -10,8 +10,8 @@
     "sea_transport": {
         "KP_DSV_YD": {
             "lane_id": "L01",
-            "rate": 252.00,
-            "route": "Khalifa Port → Storage Yard",
+            "rate": 252.0,
+            "route": "Khalifa Port \u2192 Storage Yard",
             "category": "Container",
             "port": "Khalifa Port",
             "destination": "Storage Yard",
@@ -20,8 +20,8 @@
         },
         "KP_DSV_MUSSAFAH": {
             "lane_id": "L01A",
-            "rate": 252.00,
-            "route": "Khalifa Port → DSV Mussafah Yard",
+            "rate": 252.0,
+            "route": "Khalifa Port \u2192 DSV Mussafah Yard",
             "category": "Container",
             "port": "Khalifa Port",
             "destination": "DSV Mussafah Yard",
@@ -30,8 +30,8 @@
         },
         "DSV_MUSSAFAH_KP": {
             "lane_id": "L01B",
-            "rate": 252.00,
-            "route": "DSV Mussafah Yard → Khalifa Port",
+            "rate": 252.0,
+            "route": "DSV Mussafah Yard \u2192 Khalifa Port",
             "category": "Container",
             "port": "DSV Mussafah Yard",
             "destination": "Khalifa Port",
@@ -40,8 +40,8 @@
         },
         "DSV_YD_MIRFA": {
             "lane_id": "L38",
-            "rate": 420.00,
-            "route": "DSV Yard → MIRFA",
+            "rate": 420.0,
+            "route": "DSV Yard \u2192 MIRFA",
             "category": "Container",
             "port": "Storage Yard",
             "destination": "MIRFA SITE",
@@ -50,8 +50,8 @@
         },
         "DSV_YD_SHUWEIHAT": {
             "lane_id": "L44",
-            "rate": 600.00,
-            "route": "DSV Yard → SHUWEIHAT",
+            "rate": 600.0,
+            "route": "DSV Yard \u2192 SHUWEIHAT",
             "category": "Container",
             "port": "Storage Yard",
             "destination": "SHUWEIHAT Site",
@@ -60,8 +60,8 @@
         },
         "MOSB_DSV_YD": {
             "lane_id": "L33",
-            "rate": 200.00,
-            "route": "MOSB → DSV Yard",
+            "rate": 200.0,
+            "route": "MOSB \u2192 DSV Yard",
             "category": "Container",
             "port": "Musaffah Port",
             "destination": "Storage Yard",
@@ -72,8 +72,8 @@
     "air_transport": {
         "AUH_DSV_MUSSAFAH": {
             "lane_id": "A01",
-            "rate": 100.00,
-            "route": "AUH Airport → DSV Mussafah (3T PU)",
+            "rate": 100.0,
+            "route": "AUH Airport \u2192 DSV Mussafah (3T PU)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "Storage Yard",
@@ -83,8 +83,8 @@
         },
         "AUH_MOSB_3T": {
             "lane_id": "A01B",
-            "rate": 100.00,
-            "route": "AUH Airport → MOSB (3T PU)",
+            "rate": 100.0,
+            "route": "AUH Airport \u2192 MOSB (3T PU)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "MOSB",
@@ -94,8 +94,8 @@
         },
         "AUH_MOSB_1T": {
             "lane_id": "A01C",
-            "rate": 200.00,
-            "route": "AUH Airport → MOSB (FB)",
+            "rate": 200.0,
+            "route": "AUH Airport \u2192 MOSB (FB)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "MOSB",
@@ -105,18 +105,18 @@
         },
         "AUH_MIRFA_1T": {
             "lane_id": "AAM1T",
-            "rate": 150.00,
-            "route": "Abu Dhabi Airport → MIRFA (≤1t)",
+            "rate": 150.0,
+            "route": "Abu Dhabi Airport \u2192 MIRFA (\u22641t)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "MIRFA SITE",
             "unit": "per truck",
-            "weight_category": "≤1t"
+            "weight_category": "\u22641t"
         },
         "AUH_MIRFA_3T": {
             "lane_id": "AAM3T",
-            "rate": 150.00,
-            "route": "Abu Dhabi Airport → MIRFA (1-3t)",
+            "rate": 150.0,
+            "route": "Abu Dhabi Airport \u2192 MIRFA (1-3t)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "MIRFA SITE",
@@ -125,8 +125,8 @@
         },
         "AUH_MIRFA_FB": {
             "lane_id": "AAM_FB",
-            "rate": 405.00,
-            "route": "Abu Dhabi Airport → MIRFA (FB)",
+            "rate": 405.0,
+            "route": "Abu Dhabi Airport \u2192 MIRFA (FB)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "MIRFA",
@@ -136,18 +136,18 @@
         },
         "AUH_SHUWEIHAT_1T": {
             "lane_id": "AAS1T",
-            "rate": 210.00,
-            "route": "Abu Dhabi Airport → SHUWEIHAT (≤1t)",
+            "rate": 210.0,
+            "route": "Abu Dhabi Airport \u2192 SHUWEIHAT (\u22641t)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "SHUWEIHAT Site",
             "unit": "per truck",
-            "weight_category": "≤1t"
+            "weight_category": "\u22641t"
         },
         "AUH_SHUWEIHAT_FB": {
             "lane_id": "AAS_FB",
-            "rate": 405.00,
-            "route": "Abu Dhabi Airport → SHUWEIHAT (FB)",
+            "rate": 405.0,
+            "route": "Abu Dhabi Airport \u2192 SHUWEIHAT (FB)",
             "category": "Air",
             "port": "Abu Dhabi Airport",
             "destination": "SHUWEIHAT",
@@ -193,6 +193,33 @@
             "HFZ": "Hamariya Free Zone",
             "MOSB": "MOSB",
             "KHALIFA PORT": "Khalifa Port"
+        }
+    },
+    "anomaly_detection": {
+        "enabled": true,
+        "model": {
+            "type": "robust_zscore",
+            "params": {
+                "default_spread": 0.08
+            }
+        },
+        "risk_thresholds": {
+            "low": 1.0,
+            "medium": 2.0,
+            "high": 3.5
+        },
+        "lane_overrides": {
+            "L01": {
+                "enabled": true,
+                "risk_thresholds": {
+                    "low": 0.8,
+                    "medium": 1.5,
+                    "high": 2.5
+                }
+            },
+            "A01": {
+                "enabled": false
+            }
         }
     }
 }

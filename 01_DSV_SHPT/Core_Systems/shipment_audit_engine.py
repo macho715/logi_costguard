@@ -19,8 +19,9 @@ import json
 import os
 import re
 import sys
+from dataclasses import asdict
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Set
 from pathlib import Path
 import logging
 
@@ -35,7 +36,7 @@ from portal_fee import (
     get_portal_fee_band,
 )
 from rate_service import RateService
-from anomaly_detection_service import AnomalyDetectionService
+from anomaly_detection import AnomalyDetectionService
 
 # PDF Integration import
 try:
@@ -134,6 +135,18 @@ class ShipmentAuditEngine:
         # Rate Service 초기화 (Issue #4 패치: 중복 로직 통합)
         self.rate_service = RateService(self.config_manager)
         logging.info("Rate Service initialized for ShipmentAuditEngine")
+
+        # Anomaly Detection 초기화
+        self.anomaly_base_config = self.config_manager.get_anomaly_detection_config()
+        self.anomaly_detectors: Dict[Optional[str], Optional[AnomalyDetectionService]] = {}
+        self.anomaly_disabled_lanes: Set[str] = set()
+        self.anomaly_detectors[None] = self._create_anomaly_detector(
+            self.anomaly_base_config
+        )
+        if self.anomaly_detectors[None] is None and not self.anomaly_base_config.get(
+            "enabled", False
+        ):
+            logging.info("Anomaly detection disabled globally")
 
         # Portal Fee 설정 (Enhanced 기능) - portal_fee.py로 마이그레이션 예정
         self.portal_fee_keywords = [
@@ -583,6 +596,86 @@ class ShipmentAuditEngine:
             validation["gate_fails"] = gate_result["Gate_Fails"]
             validation["gates"] = gate_result.get("gates", {})
 
+            lane_metadata = self._resolve_lane_metadata(item) or {}
+            lane_id = lane_metadata.get("lane_id")
+            lane_rate = (
+                validation.get("ref_rate_usd")
+                or lane_metadata.get("rate")
+                or item.get("unit_rate")
+                or 0.0
+            )
+
+            anomaly_features: Dict[str, Any] = {
+                "unit_rate": float(item.get("unit_rate", 0.0)),
+                "quantity": float(item.get("quantity", 0.0)),
+                "total_usd": float(item.get("total_usd", 0.0)),
+                "lane_rate": float(lane_rate or 0.0),
+                "delta_pct": float(validation.get("delta_pct", 0.0)),
+            }
+
+            if lane_metadata:
+                anomaly_features.update(
+                    {
+                        "lane_id": lane_id,
+                        "lane_category": lane_metadata.get("category"),
+                        "lane_port": lane_metadata.get("port"),
+                        "lane_destination": lane_metadata.get("destination"),
+                    }
+                )
+
+            anomaly_features["charge_group"] = validation.get("charge_group")
+            anomaly_features["sheet_name"] = item.get("sheet_name")
+            anomaly_features["s_no"] = item.get("s_no")
+
+            detector = self._get_anomaly_detector(lane_id)
+            anomaly_payload: Dict[str, Any] = {
+                "lane_id": lane_id,
+                "lane_metadata": lane_metadata,
+                "features": self._format_anomaly_features(anomaly_features),
+            }
+
+            if detector and detector.enabled:
+                anomaly_result = detector.score_item(anomaly_features)
+                anomaly_payload.update(asdict(anomaly_result))
+
+                if anomaly_result.flagged:
+                    issue_msg = (
+                        "Anomaly detection risk "
+                        f"{anomaly_result.risk_level}"
+                        f" (score {anomaly_result.score:.2f})"
+                    )
+                    validation["issues"].append(issue_msg)
+
+                    if anomaly_result.risk_level == "HIGH":
+                        validation["status"] = "FAIL"
+                        validation["flag"] = "CRITICAL"
+                    elif anomaly_result.risk_level == "MEDIUM":
+                        if validation["status"] != "FAIL":
+                            validation["status"] = "REVIEW_NEEDED"
+                        if validation["flag"] not in ["CRITICAL", "HIGH"]:
+                            validation["flag"] = "HIGH"
+                    elif anomaly_result.risk_level == "LOW":
+                        if validation["status"] != "FAIL":
+                            validation["status"] = "REVIEW_NEEDED"
+                        if validation["flag"] == "OK":
+                            validation["flag"] = "WARN"
+            else:
+                disabled_reason = (
+                    "lane_disabled" if lane_id in self.anomaly_disabled_lanes else "disabled"
+                )
+                anomaly_payload.update(
+                    {
+                        "enabled": False,
+                        "score": 0.0,
+                        "risk_level": "DISABLED",
+                        "flagged": False,
+                        "model": self.anomaly_base_config.get("model", {}).get("type", "none"),
+                        "details": {"reason": disabled_reason},
+                    }
+                )
+
+            validation["anomaly_detection"] = anomaly_payload
+
             # 4. 최종 상태 결정
             if not validation["issues"] and validation["gate_status"] == "PASS":
                 validation["status"] = "PASS"
@@ -861,6 +954,127 @@ class ShipmentAuditEngine:
         )
         return supporting_docs
 
+    def _create_anomaly_detector(
+        self, config: Dict[str, Any]
+    ) -> Optional[AnomalyDetectionService]:
+        """이상 탐지기 생성 / Create anomaly detector from config."""
+
+        if not config.get("enabled", False):
+            return None
+
+        try:
+            detector = AnomalyDetectionService(config)
+        except Exception as exc:
+            logging.error(f"⚠️ Anomaly detector initialization failed: {exc}")
+            return None
+
+        if not detector.enabled:
+            return None
+
+        logging.info(
+            "Anomaly detection enabled: model=%s",
+            config.get("model", {}).get("type", "unknown"),
+        )
+        return detector
+
+    def _get_anomaly_detector(
+        self, lane_id: Optional[str]
+    ) -> Optional[AnomalyDetectionService]:
+        """Lane별 이상 탐지기 조회 / Resolve detector for lane."""
+
+        if lane_id and lane_id in self.anomaly_disabled_lanes:
+            return None
+
+        if lane_id not in self.anomaly_detectors:
+            lane_config = self.config_manager.get_anomaly_detection_config(lane_id)
+            if not lane_config.get("enabled", False):
+                if lane_id:
+                    self.anomaly_disabled_lanes.add(lane_id)
+                self.anomaly_detectors[lane_id] = None
+            else:
+                self.anomaly_detectors[lane_id] = self._create_anomaly_detector(
+                    lane_config
+                )
+
+        if lane_id is None:
+            return self.anomaly_detectors.get(None)
+
+        return self.anomaly_detectors.get(lane_id)
+
+    def _resolve_lane_metadata(
+        self, item: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Lane 메타데이터 계산 / Resolve lane metadata for item."""
+
+        description = item.get("description", "")
+        port, destination = self._parse_transportation_route(description)
+        if port and destination:
+            return self.config_manager.get_lane_metadata(port, destination) or None
+        return None
+
+    @staticmethod
+    def _format_anomaly_features(features: Dict[str, Any]) -> Dict[str, Any]:
+        """이상 탐지 피처 정규화 / Normalise anomaly features for storage."""
+
+        formatted: Dict[str, Any] = {}
+        for key, value in features.items():
+            if isinstance(value, float):
+                formatted[key] = round(value, 2)
+            else:
+                formatted[key] = value
+        return formatted
+
+    def _summarize_anomalies(self, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """이상 탐지 집계 / Summarise anomaly results across items."""
+
+        base_enabled = bool(self.anomaly_base_config.get("enabled", False))
+        summary = {
+            "enabled": base_enabled,
+            "model": self.anomaly_base_config.get("model", {}).get("type", "none"),
+            "total_scored": 0,
+            "flagged_items": 0,
+            "average_score": 0.0,
+            "risk_counts": {},
+        }
+
+        lane_feature_map: Dict[Optional[str], List[Dict[str, Any]]] = {}
+        for item in items:
+            anomaly_data = item.get("anomaly_detection")
+            if not anomaly_data or not anomaly_data.get("features"):
+                continue
+
+            lane_id = anomaly_data.get("lane_id")
+            if lane_id in self.anomaly_disabled_lanes:
+                continue
+
+            lane_feature_map.setdefault(lane_id, []).append(anomaly_data["features"])
+
+        combined_scores: List[float] = []
+        for lane_id, feature_list in lane_feature_map.items():
+            detector = self._get_anomaly_detector(lane_id)
+            if not detector or not detector.enabled:
+                continue
+
+            batch_result = detector.score_batch(feature_list)
+            summary["total_scored"] += batch_result.get("total_scored", 0)
+            summary["flagged_items"] += batch_result.get("flagged_items", 0)
+            for risk_level, count in batch_result.get("risk_counts", {}).items():
+                summary["risk_counts"][risk_level] = summary["risk_counts"].get(
+                    risk_level, 0
+                ) + count
+            combined_scores.append(
+                batch_result.get("average_score", 0.0)
+                * batch_result.get("total_scored", 0)
+            )
+
+        if summary["total_scored"] > 0 and combined_scores:
+            summary["average_score"] = round(
+                sum(combined_scores) / summary["total_scored"],
+                2,
+            )
+
+        return summary
+
     def extract_shipment_id(self, filename: str) -> Optional[str]:
         """파일명에서 Shipment ID 추출 (개선)"""
         if "HVDC-ADOPT-" in filename:
@@ -1084,6 +1298,8 @@ class ShipmentAuditEngine:
                 else 0
             )
 
+            anomaly_summary = self._summarize_anomalies(all_items)
+
             # 5. 결과 생성
             audit_result = {
                 "audit_info": {
@@ -1129,10 +1345,12 @@ class ShipmentAuditEngine:
                         ),
                         "avg_gate_score": round(avg_gate_score, 1),
                     },
+                    "anomaly_detection": anomaly_summary,
                 },
                 "supporting_docs": supporting_docs,
                 "sheet_summary": sheet_summary,
                 "items": all_items,
+                "anomaly_detection": anomaly_summary,
             }
 
             # 6. 결과 저장
