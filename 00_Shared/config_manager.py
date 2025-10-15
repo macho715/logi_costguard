@@ -41,6 +41,7 @@ class ConfigurationManager:
         self.cost_guard_config = {}
         self.contract_rates_config = {}
         self.validation_rules_config = {}
+        self.anomaly_config = {}
 
         # 로드 상태
         self.is_loaded = False
@@ -57,6 +58,7 @@ class ConfigurationManager:
         self.validation_rules_config = self._load_json_config(
             "config_validation_rules.json"
         )
+        self.anomaly_config = self.lane_config.get("anomaly_detection", {})
 
         self.is_loaded = True
         logger.info("All configurations loaded successfully")
@@ -292,6 +294,81 @@ class ConfigurationManager:
 
         return None
 
+    def get_lane_metadata(
+        self, port: str, destination: str, unit: str = "per truck"
+    ) -> Optional[Dict[str, Any]]:
+        """Lane 메타데이터 조회 / Retrieve lane metadata."""
+
+        if not self.is_loaded:
+            self.load_all_configs()
+
+        lane_map = self.get_lane_map()
+        lane_key = f"{port}_{destination}".replace(" ", "_").upper()
+
+        if lane_key in lane_map:
+            metadata = dict(lane_map[lane_key])
+            metadata["lane_key"] = lane_key
+            return metadata
+
+        aliases = self.get_normalization_aliases()
+        normalized_port = port
+        for alias, canonical in aliases.get("ports", {}).items():
+            if alias.upper() in port.upper():
+                normalized_port = canonical
+                break
+
+        normalized_dest = destination
+        for alias, canonical in aliases.get("destinations", {}).items():
+            if alias.upper() in destination.upper():
+                normalized_dest = canonical
+                break
+
+        lane_key = f"{normalized_port}_{normalized_dest}".replace(" ", "_").upper()
+        if lane_key in lane_map:
+            metadata = dict(lane_map[lane_key])
+            metadata["lane_key"] = lane_key
+            return metadata
+
+        for lane_name, lane_info in lane_map.items():
+            port_name = lane_info.get("port", "")
+            dest_name = lane_info.get("destination", "")
+            if (
+                port_name.upper() in port.upper() or port.upper() in port_name.upper()
+            ) and (
+                dest_name.upper() in destination.upper()
+                or destination.upper() in dest_name.upper()
+            ):
+                if lane_info.get("unit") == unit:
+                    metadata = dict(lane_info)
+                    metadata["lane_key"] = lane_name
+                    return metadata
+
+        return None
+
+    def get_anomaly_detection_config(
+        self, lane_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """이상 탐지 설정 조회 / Retrieve anomaly detection configuration."""
+
+        if not self.is_loaded:
+            self.load_all_configs()
+
+        config = dict(self.anomaly_config)
+        overrides = config.get("lane_overrides", {})
+
+        if lane_id and lane_id in overrides:
+            lane_override = overrides[lane_id]
+            merged = dict(config)
+            merged.update({k: v for k, v in lane_override.items() if k != "risk_thresholds"})
+            if "risk_thresholds" in lane_override:
+                merged.setdefault("risk_thresholds", {})
+                base_thresholds = dict(config.get("risk_thresholds", {}))
+                base_thresholds.update(lane_override["risk_thresholds"])
+                merged["risk_thresholds"] = base_thresholds
+            config = merged
+
+        return config
+
     def get_inland_transportation_rate(
         self, origin: str, destination: str
     ) -> Optional[float]:
@@ -382,6 +459,7 @@ class ConfigurationManager:
             "cost_guard_bands": len(self.get_cost_guard_bands()),
             "contract_rates": len(self.contract_rates_config.get("fixed_fees", {})),
             "portal_fees": len(self.contract_rates_config.get("portal_fees_aed", {})),
+            "anomaly_detection_enabled": bool(self.anomaly_config.get("enabled", False)),
             "config_files_loaded": sum(
                 [
                     bool(self.lane_config),
