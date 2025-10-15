@@ -4,6 +4,7 @@
 **Contract No**: HVDC-SHPT-2025-001
 **Version**: v4.2-ANOMALY-DETECTION
 **Last Updated**: 2025-10-16
+**Status**: ✅ All Enhancements Complete
 
 ---
 
@@ -30,6 +31,22 @@
 
 ---
 
+## ✅ v4.2 Enhancement Complete
+
+### 완료된 개선사항
+- **PDF Integration 활성화**: pdfplumber 기반 고정밀 파싱
+- **Enhanced Excel Report**: 5개 새 열 (Anomaly Score, Risk Score, Risk Level, Anomaly Details, Risk Components)
+- **Anomaly Detection 튜닝**: 실제 데이터 기반 threshold 최적화
+- **Risk Score 가중치 조정**: 도메인 전문가 검토 가이드
+
+### 생성된 보고서
+- [`V4.2_ENHANCEMENT_COMPLETE_REPORT.md`](V4.2_ENHANCEMENT_COMPLETE_REPORT.md) - 전체 개선사항 요약
+- [`ANOMALY_TUNING_REPORT_20251016_020222.md`](ANOMALY_TUNING_REPORT_20251016_020222.md) - Anomaly Detection 튜닝 결과
+- [`RISK_WEIGHT_COMPARISON_REPORT_20251016_020534.md`](RISK_WEIGHT_COMPARISON_REPORT_20251016_020534.md) - 가중치 비교 분석
+- [`RISK_WEIGHT_TUNING_GUIDE.md`](RISK_WEIGHT_TUNING_GUIDE.md) - 도메인 전문가 가이드
+
+---
+
 ## ⚡ Quick Start
 
 ### Legacy Mode (간단)
@@ -51,6 +68,93 @@ wsl
 cd 01_DSV_SHPT/Core_Systems
 export USE_HYBRID=true
 python masterdata_validator.py
+```
+
+---
+
+## 🛠️ 새로운 도구 및 모듈
+
+### Enhanced Excel Report Generator
+```bash
+# Enhanced Excel Report 생성 (자동 실행)
+cd Core_Systems
+python run_audit.py
+# → Results/Excel/shpt_sept_2025_enhanced_report_YYYYMMDD_HHMMSS.xlsx 생성
+```
+
+**새로운 열**:
+- `anomaly_score`: 0-100 이상치 탐지 점수
+- `risk_score`: 0-1.0 통합 리스크 점수
+- `risk_level`: LOW/MEDIUM/HIGH/CRITICAL
+- `anomaly_details`: 이상치 상세 정보 (JSON)
+- `risk_components`: 리스크 구성 요소 (JSON)
+
+### Anomaly Detection Tuning
+```bash
+# Anomaly Detection 튜닝 실행
+cd Core_Systems
+python tune_anomaly_detection.py
+# → ANOMALY_TUNING_REPORT_YYYYMMDD_HHMMSS.md 생성
+```
+
+### Risk Score Weight Testing
+```bash
+# Risk Score 가중치 테스트 실행
+cd Core_Systems
+python test_risk_weights.py
+# → RISK_WEIGHT_COMPARISON_REPORT_YYYYMMDD_HHMMSS.md 생성
+```
+
+### 사용 예시
+
+#### Enhanced Excel Report 수동 생성
+```python
+from create_enhanced_excel_report import create_enhanced_excel_report
+import pandas as pd
+
+# 검증 결과 로드
+validation_df = pd.read_csv("Results/Sept_2025/CSV/shpt_sept_2025_validation_YYYYMMDD_HHMMSS.csv")
+
+# Enhanced Excel Report 생성
+output_path = "enhanced_report.xlsx"
+create_enhanced_excel_report(validation_df, output_path)
+```
+
+#### Anomaly Detection 설정 조정
+```python
+# config_shpt_lanes.json 예시
+{
+  "lanes": {
+    "SCT-KP-MIRFA": {
+      "anomaly_detection": {
+        "enabled": true,
+        "model": {
+          "type": "robust_zscore",
+          "params": {
+            "threshold": 2.8,  # 튜닝 결과
+            "min_samples": 12
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### Risk Score 가중치 조정
+```python
+# config_validation_rules.json 예시
+{
+  "risk_based_review": {
+    "weights": {
+      "delta": 0.4,        # 요율 차이 가중치
+      "anomaly": 0.3,      # 이상치 가중치
+      "certification": 0.2, # 인증 상태 가중치
+      "signature": 0.1     # 서명 검증 가중치
+    },
+    "trigger_threshold": 0.8  # 리뷰 필요 임계값
+  }
+}
 ```
 
 ---

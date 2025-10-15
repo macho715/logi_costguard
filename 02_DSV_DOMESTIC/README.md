@@ -2,8 +2,9 @@
 
 **프로젝트**: HVDC Project - Samsung C&T Logistics
 **기간**: 2025-10-12 ~ 2025-10-13
-**최종 버전**: PATCH4 (v4.0) + Hybrid + Migration Ready
-**Status**: ✅ Production Ready + Migration Ready
+**최종 버전**: PATCH4 (v4.0) + Hybrid + Migration Ready + 00_Shared Integration
+**Status**: ✅ Production Ready + Migration Ready + Shared Library Ready
+**Last Updated**: 2025-10-16
 
 ---
 
@@ -55,6 +56,144 @@
 - **[CLEANUP_REPORT_20251014.md](Reports/Updates/CLEANUP_REPORT_20251014.md)**: 폴더 정리 보고서
 - **[DOCUMENTATION_UPDATE_REPORT.md](Reports/Updates/DOCUMENTATION_UPDATE_REPORT.md)**: 문서 업데이트 보고서
 - **[README_UPDATE_FINAL_REPORT.md](Reports/Updates/README_UPDATE_FINAL_REPORT.md)**: README 업데이트 보고서
+
+---
+
+## 📊 시스템 아키텍처
+
+### DN 매칭 알고리즘 (3단계 Fuzzy Matching)
+
+```mermaid
+flowchart TD
+    A[DN Description] --> B{1단계: Exact Match}
+    B -->|성공| C[100% 매칭]
+    B -->|실패| D{2단계: Contains Match}
+    D -->|성공| E[90% 매칭]
+    D -->|실패| F{3단계: Keyword Match}
+    F -->|성공| G[80% 매칭]
+    F -->|실패| H{4단계: Fuzzy Match}
+    H -->|성공| I[60-70% 매칭]
+    H -->|실패| J[매칭 실패]
+    
+    C --> K[Destination 추출]
+    E --> K
+    G --> K
+    I --> K
+    
+    K --> L[Lane Rate 조회]
+    L --> M[Delta 계산]
+    M --> N[COST-GUARD 적용]
+    N --> O[검증 결과]
+```
+
+### Hybrid Integration 아키텍처
+
+```mermaid
+graph TB
+    subgraph "Domestic System v4.0"
+        A[Excel Invoice] --> B[validate_domestic_with_pdf.py]
+        B --> C[enhanced_matching.py]
+        B --> D[hybrid_pdf_integration.py]
+        
+        C --> E[3단계 Fuzzy Matching]
+        E --> F[Destination 추출]
+        F --> G[Lane Rate 조회]
+        
+        D --> H[PDF 파싱]
+        H --> I[Total Amount 추출]
+        I --> J[AED → USD 변환]
+        
+        G --> K[Delta 계산]
+        J --> K
+        K --> L[COST-GUARD 검증]
+        L --> M[결과 생성]
+    end
+    
+    subgraph "00_Shared Integration"
+        N[cost_guard.py]
+        O[portal_fee.py]
+        P[rate_service.py]
+        Q[hybrid_integration/]
+        R[pdf_integration/]
+    end
+    
+    C --> P
+    D --> Q
+    D --> R
+    L --> N
+```
+
+### 검증 프로세스 전체 흐름
+
+```mermaid
+flowchart LR
+    A[Excel Invoice Data] --> B[DN Description 추출]
+    B --> C[3단계 Fuzzy Matching]
+    C --> D[Destination 매칭]
+    D --> E[Lane Rate 조회]
+    E --> F[PDF Total Amount 추출]
+    F --> G[Delta % 계산]
+    G --> H[COST-GUARD 적용]
+    H --> I[검증 상태 결정]
+    I --> J[Excel Report 생성]
+    
+    K[Configuration Files] --> E
+    L[PDF Documents] --> F
+    M[00_Shared Libraries] --> H
+```
+
+---
+
+## 🔧 00_Shared 공용 라이브러리 활용
+
+### cost_guard.py
+```python
+# COST-GUARD 밴드 결정
+from cost_guard import get_cost_guard_band
+
+band = get_cost_guard_band(delta_percent=3.5, cost_guard_bands=config)
+# 결과: "WARN" (2-5% 범위)
+```
+
+### portal_fee.py
+```python
+# Portal Fee 고정 요율 조회
+from portal_fee import get_portal_fee_rate
+
+rate = get_portal_fee_rate("APPOINTMENT")
+# 결과: 27.0 (AED)
+```
+
+### rate_service.py
+```python
+# 통합 요율 서비스
+from rate_service import RateService
+
+rate_service = RateService(config_manager)
+rate = rate_service.get_inland_transportation_rate(
+    origin="Khalifa Port", 
+    destination="MIRFA"
+)
+```
+
+### hybrid_integration/
+```python
+# Hybrid PDF 통합
+from hybrid_integration.unified_ir_adapter import UnifiedIRAdapter
+
+adapter = UnifiedIRAdapter()
+result = adapter.parse_pdf("document.pdf")
+# 결과: {"total_amount": 1250.0, "currency": "AED"}
+```
+
+### pdf_integration/
+```python
+# PDF 파싱 엔진
+from pdf_integration.workflow_automator import WorkflowAutomator
+
+automator = WorkflowAutomator()
+pdf_data = automator.extract_pdf_content("document.pdf")
+```
 
 ---
 
